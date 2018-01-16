@@ -1,7 +1,7 @@
 module Main where
 
-import qualified Parse as Parse
-import qualified Run as Run
+import qualified Parse
+import qualified Run
 
 main :: IO ()
 main = do

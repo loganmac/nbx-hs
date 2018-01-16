@@ -1,121 +1,124 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Parse where
 
+import qualified Command   as C
 import qualified Data.Text as Text
-import Turtle
+import           Turtle
 
--- Top level command types
-data Command 
-  = Main 
-  | Modal Mode ModalCommand
-  | Init 
-  | Version
-
--- what mode the modal commands are being run in
-data Mode = Dev | Live 
-  deriving (Show)
-
--- a modal command under `nbx live` or `nbx dev`
-data ModalCommand 
-  = Run RunCommand
-  | Logs  
-  | Evar
-  | Alias
-  | Destroy
-
--- aliases for positional args
-type Target = Text
-type TargetCommand = Text
-
--- a command under `run`, either with args or empty.
-data RunCommand 
-  = Start
-  | Console Target
-  | Execute Target TargetCommand
 
 -- parse arguments, return a command
-command :: IO Command
-command = do
+command :: IO C.Command
+command =
   options "NBX: the Nanobox CLI" parser
 
 -- parsers that turn arguments into commands
-parser :: Parser Command
-parser = 
-  mainCmd <|> initCmd <|> modalCmd <|> versionCmd
+parser :: Parser C.Command
+parser =
+  mainCmd
+  <|> initCmd
+  <|> modalCmd
+  <|> setupCmd
+  <|> implodeCmd
+  <|> statusCmd
+  <|> versionCmd
 
 -- parse a raw `nbx`
-mainCmd :: Parser Command
+mainCmd :: Parser C.Command
 mainCmd =
-  pure Main
+  pure C.Main
 
 -- parse `nbx init`
-initCmd :: Parser Command
+initCmd :: Parser C.Command
 initCmd =
-  subcommand 
-    "init" 
-    "Initialize a .nbx.yml file for a project" 
-    $ pure Init
+  subcommand
+    "init"
+    "Initialize a .nbx.yml file for a project"
+    $ pure C.Init
+
+-- parse `nbx setup`
+setupCmd :: Parser C.Command
+setupCmd =
+  subcommand
+    "setup"
+    "Install/configure NBX platform."
+    $ pure C.Setup
+
+-- parse `nbx implode`
+implodeCmd :: Parser C.Command
+implodeCmd =
+  subcommand
+    "implode"
+    "Delete NBX and all configuration"
+    $ pure C.Implode
+
+-- parse `nbx status`
+statusCmd :: Parser C.Command
+statusCmd =
+  subcommand
+    "status"
+    "Display the status of the NBX platform."
+    $ pure C.Status
 
 -- parse `nbx version`
-versionCmd :: Parser Command
-versionCmd = do
+versionCmd :: Parser C.Command
+versionCmd =
   subcommand
     "version"
     "Display version info"
-    $ pure Version
+    $ pure C.Version
 
 -- parses either `nbx dev` or `nbx live`
-modalCmd :: Parser Command
+modalCmd :: Parser C.Command
 modalCmd =
   dev <|> live
   where
-    dev = subcommand 
+    dev = subcommand
       "dev"
       "Commands for running a dev environment"
-      $ Modal Dev <$> stackCmd
-    live = subcommand 
+      $ C.Modal C.Dev <$> modelSub
+    live = subcommand
       "live"
       "Commands for running a live environment"
-      $ Modal Live <$> stackCmd
+      $ C.Modal C.Live <$> modelSub
 
 -- parses subcommands of `nbx dev ___` or `nbx live ___`
 -- like `run`, or `logs`, or `destroy`
-stackCmd :: Parser ModalCommand
-stackCmd =
+modelSub :: Parser C.ModalCommand
+modelSub =
     run <|> logs <|> destroy
     where
-      run = subcommand 
+      run = subcommand
         "run"
         "Run the environment"
-        $ Run <$> runCmd
+        $ C.Run <$> runCmd
       logs = subcommand
         "logs"
         "View the logs"
-        $ pure Logs
+        $ pure C.Logs
       destroy = subcommand
         "destroy"
         "Destroy a stack"
-        $ pure Destroy
+        $ pure C.Destroy
 
 -- Parses either a start command, (no args)
 -- or parses a console/execute command (with args)
-runCmd :: Parser RunCommand
-runCmd = pure Start <|> consoleOrExecuteCmd
+runCmd :: Parser C.RunCommand
+runCmd = pure C.Start <|> consoleOrExecuteCmd
 
 -- Parses for target and a list of [command], then parses to either a
 -- Console command, or an execute. If execute, it joins the list with
 -- spaces, and parses the list as a single command.
-consoleOrExecuteCmd :: Parser RunCommand
+consoleOrExecuteCmd :: Parser C.RunCommand
 consoleOrExecuteCmd =
   argsToCommand <$> parseRunArgs
   where
     parseRunArgs :: Parser (Text, [Text])
     parseRunArgs =
-      (,) <$> argText "target" "target to console into" 
+      (,) <$> argText "target" "target to console into"
           <*> many (argText "command" "command to give target")
 
-    argsToCommand :: (Target, [Text]) -> RunCommand
+    argsToCommand :: (C.Target, [Text]) -> C.RunCommand
     argsToCommand (target, args) =
       case args of
-        [] -> Console target
-        xs -> Execute target (Text.intercalate " " xs)
+        [] -> C.Console target
+        xs -> C.Execute target (Text.intercalate " " xs)

@@ -1,20 +1,26 @@
 module Run where
 
+import qualified Command   as C
 import qualified Data.Text as T
-import qualified Parse as P
 
 -- run a command
-command :: P.Command -> IO ()
+command :: C.Command -> IO ()
 command cmd =
   case cmd of
-    P.Main -> 
+    C.Main ->
       mainCmd
-    P.Modal mode sub -> 
-      putStrLn $ "MODE: " ++ show mode ++ "\n" ++ modalCmd sub
-    P.Init -> 
+    C.Init ->
       initCmd
-    P.Version -> 
+    C.Setup ->
+      setupCmd
+    C.Implode ->
+      implodeCmd
+    C.Status ->
+      statusCmd
+    C.Version ->
       versionCmd
+    C.Modal mode sub ->
+      modalCmd mode sub
 
 -- run the main command
 mainCmd :: IO ()
@@ -23,28 +29,47 @@ mainCmd = do
   putStrLn "For help, run 'nbx -h'."
 
 -- run a modal command like `nbx dev` or `nbx live`
-modalCmd :: P.ModalCommand -> String
-modalCmd cmd =
+modalCmd :: C.Mode -> C.ModalCommand -> IO ()
+modalCmd mode cmd =
+  putStrLn $ "MODE: " ++ show mode ++ "\n"
+  ++ modalSubCmd cmd
+
+-- run a modal subcommand like `nbx dev logs`
+modalSubCmd :: C.ModalCommand -> String
+modalSubCmd cmd =
   case cmd of
-    P.Logs -> "LOGS!"
-    P.Destroy -> "DESTROY!"
-    P.Run sub -> runCmd sub
+    C.Logs    -> "LOGS!"
+    C.Destroy -> "DESTROY!"
+    C.Run sub -> runCmd sub
 
 -- run a modal run subcommand like `nbx dev run`
-runCmd :: P.RunCommand -> String
+runCmd :: C.RunCommand -> String
 runCmd cmd =
   case cmd of
-    P.Start -> 
+    C.Start ->
       "START!"
-    P.Console target  -> 
+    C.Console target  ->
       "CONSOLE: " ++ T.unpack target
-    P.Execute target sub -> 
-      "TARGET: " ++ T.unpack target ++ "\n" ++  
+    C.Execute target sub ->
+      "TARGET: " ++ T.unpack target ++ "\n" ++
       "EXECUTE: " ++ T.unpack sub
 
+-- run the init command `nbx init`
 initCmd :: IO ()
-initCmd = putStrLn "INIT!!!"
-      
+initCmd = putStrLn "INIT!"
+
+-- run the setup command `nbx setup`
+setupCmd :: IO ()
+setupCmd = putStrLn "SETUP!"
+
+-- run the implode command `nbx implode`
+implodeCmd :: IO ()
+implodeCmd = putStrLn "IMPLODE!"
+
+-- run the status command `nbx status`
+statusCmd :: IO ()
+statusCmd = putStrLn "STATUS!"
+
 -- display the version of the CLI
 versionCmd ::  IO ()
 versionCmd = putStrLn "NBX version 0.0.1"
