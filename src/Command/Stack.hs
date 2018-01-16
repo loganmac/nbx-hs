@@ -34,42 +34,35 @@ data RunCommand
 -- parses either `nbx dev` or `nbx live`
 parseCommand :: Parser Command
 parseCommand =
-  parseDev
-  <|> parseLive
-
--- parses `nbx dev`
-parseDev :: Parser Command
-parseDev = 
-  subcommand 
-    "dev"
-    "Commands for running a dev environment"
-    $ (Command Dev) <$> parseSubcommand
-
--- parses `nbx live`
-parseLive :: Parser Command
-parseLive =
-  subcommand 
-    "live"
-    "Commands for running a live environment"
-    $ (Command Live) <$> parseSubcommand
+  dev <|> live
+  where
+    dev = subcommand 
+      "dev"
+      "Commands for running a dev environment"
+      $ (Command Dev) <$> parseSubcommand
+    live = subcommand 
+      "live"
+      "Commands for running a live environment"
+      $ (Command Live) <$> parseSubcommand
 
 -- parses subcommands of `nbx dev ___` or `nbx live ___`
+-- like `run`, or `logs`, or `destroy`
 parseSubcommand :: Parser Subcommand
 parseSubcommand =
-  subcommandGroup "Mode specific commands:"
-    [ ( "run"
-      , "Run the environment"
-      , Run <$> parseRunCommand
-      )
-    , ( "logs"
-      , "View the logs"
-      , pure Logs
-      )
-    , ( "destroy"
-      , "Destroy a stack"
-      , pure Destroy
-      )
-    ]
+    run <|> logs <|> destroy
+    where
+      run = subcommand 
+        "run"
+        "Run the environment"
+        $ Run <$> parseRunCommand
+      logs = subcommand
+        "logs"
+        "View the logs"
+        $ pure Logs
+      destroy = subcommand
+        "destroy"
+        "Destroy a stack"
+        $ pure Destroy
 
 -- Parses either a start command, (no args)
 -- or parses a console/execute command (with args)

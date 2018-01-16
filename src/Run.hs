@@ -9,8 +9,8 @@ command :: C.Command -> IO ()
 command cmd =
   case cmd of
     C.Main -> mainCommand
-    C.Stack sub -> stack sub
-    C.Init -> putStrLn "INIT!!!"
+    C.Stack sub -> stackCommand sub
+    C.Init -> initCommand
     C.Version -> displayVersion
 
 -- run the main command
@@ -20,10 +20,12 @@ mainCommand = do
   putStrLn "For help, run 'nbx -h'."
 
 -- run a stack command like `nbx dev` or `nbx live`
-stack :: Stack.Command -> IO ()
-stack (Stack.Command mode cmd) =
-  putStrLn $ show mode ++ " " ++ 
-    case cmd of
+stackCommand :: Stack.Command -> IO ()
+stackCommand (Stack.Command mode cmd) =
+  putStrLn $ show mode ++ " " ++ subCmd
+  where
+    subCmd = 
+      case cmd of
         Stack.Logs -> "LOGS!"
         Stack.Destroy -> "DESTROY!"
         Stack.Run sub -> stackRun sub
@@ -39,6 +41,9 @@ stackRun cmd =
     Stack.Execute target sub -> 
       "EXECUTE: " ++ T.unpack target ++ ": " ++ T.unpack sub
 
+initCommand :: IO ()
+initCommand = putStrLn "INIT!!!"
+      
 -- display the version of the CLI
 displayVersion ::  IO ()
 displayVersion = putStrLn "NBX version 0.0.1"
