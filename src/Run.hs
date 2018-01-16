@@ -1,49 +1,50 @@
 module Run where
 
 import qualified Data.Text as T
-import qualified Command as C
-import qualified Command.Stack as Stack
+import qualified Parse as P
 
 -- run a command
-command :: C.Command -> IO ()
+command :: P.Command -> IO ()
 command cmd =
   case cmd of
-    C.Main -> mainCommand
-    C.Stack sub -> stackCommand sub
-    C.Init -> initCommand
-    C.Version -> displayVersion
+    P.Main -> 
+      mainCmd
+    P.Modal mode sub -> 
+      putStrLn $ "MODE: " ++ show mode ++ "\n" ++ modalCmd sub
+    P.Init -> 
+      initCmd
+    P.Version -> 
+      versionCmd
 
 -- run the main command
-mainCommand :: IO ()
-mainCommand = do
-  displayVersion
+mainCmd :: IO ()
+mainCmd = do
+  versionCmd
   putStrLn "For help, run 'nbx -h'."
 
--- run a stack command like `nbx dev` or `nbx live`
-stackCommand :: Stack.Command -> IO ()
-stackCommand (Stack.Command mode cmd) =
-  putStrLn $ show mode ++ " " ++ subCmd
-  where
-    subCmd = 
-      case cmd of
-        Stack.Logs -> "LOGS!"
-        Stack.Destroy -> "DESTROY!"
-        Stack.Run sub -> stackRun sub
-
--- run a stack run subcommand like `nbx dev run`
-stackRun :: Stack.RunCommand -> String
-stackRun cmd =
+-- run a modal command like `nbx dev` or `nbx live`
+modalCmd :: P.ModalCommand -> String
+modalCmd cmd =
   case cmd of
-    Stack.Start -> 
-      "START!"
-    Stack.Console target  -> 
-      "CONSOLE: " ++ T.unpack target
-    Stack.Execute target sub -> 
-      "EXECUTE: " ++ T.unpack target ++ ": " ++ T.unpack sub
+    P.Logs -> "LOGS!"
+    P.Destroy -> "DESTROY!"
+    P.Run sub -> runCmd sub
 
-initCommand :: IO ()
-initCommand = putStrLn "INIT!!!"
+-- run a modal run subcommand like `nbx dev run`
+runCmd :: P.RunCommand -> String
+runCmd cmd =
+  case cmd of
+    P.Start -> 
+      "START!"
+    P.Console target  -> 
+      "CONSOLE: " ++ T.unpack target
+    P.Execute target sub -> 
+      "TARGET: " ++ T.unpack target ++ "\n" ++  
+      "EXECUTE: " ++ T.unpack sub
+
+initCmd :: IO ()
+initCmd = putStrLn "INIT!!!"
       
 -- display the version of the CLI
-displayVersion ::  IO ()
-displayVersion = putStrLn "NBX version 0.0.1"
+versionCmd ::  IO ()
+versionCmd = putStrLn "NBX version 0.0.1"
