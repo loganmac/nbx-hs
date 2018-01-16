@@ -1,44 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Command where
 
-import qualified Command.Dev as Dev
-import qualified Command.Live as Live
+import qualified Command.Stack as Stack
 import Turtle
 
 data Command 
   = Main 
-  | Dev Dev.Command
-  | Live Live.Command
+  | Stack Stack.Mode Stack.Command
   | Init 
   | Version
 
-
-run :: IO ()
-run = do
-  cmd <- options "NBX: the Nanobox CLI" parser
-  runCommand cmd
-
-runCommand :: Command -> IO ()
-runCommand cmd =
-  case cmd of
-    Main -> mainCommand
-    Dev sub -> Dev.runCommand sub
-    Live sub -> Live.runCommand sub
-    Init -> putStrLn "INIT!!!"
-    Version -> displayVersion
+parse :: IO Command
+parse = do
+  options "NBX: the Nanobox CLI" parser
 
 parser :: Parser Command
 parser = 
   parseMain
-  <|> Dev <$> Dev.parse
-  <|> Live <$> Live.parse
+  <|> Stack <$> Stack.parseMode <*> Stack.parseCommands
   <|> parseInit
   <|> parseVersion
 
 parseMain :: Parser Command
 parseMain =
   pure Main
-
 
 parseInit :: Parser Command
 parseInit =
@@ -53,11 +38,3 @@ parseVersion = do
     "version"
     "Display version info"
     $ pure Version
-
-mainCommand :: IO ()
-mainCommand = do
-  displayVersion
-  putStrLn "For help, run 'nbx -h'."
-
-displayVersion ::  IO ()
-displayVersion = putStrLn "NBX version 0.0.1"
