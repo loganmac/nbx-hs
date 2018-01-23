@@ -1,23 +1,30 @@
-name:                nbx
-version:             0.1.0.0
+name:                   nbx
+version:                0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/loganmac/nbx#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Logan McPhail
-maintainer:          logan@nanobox.io
-copyright:           2018 Nanobox
-category:            DevOps
-build-type:          Simple
-cabal-version:       >=1.10
-extra-source-files:  README.md
+homepage:               https://github.com/loganmac/nbx#readme
+license:                BSD3
+license-file:           LICENSE
+author:                 Logan McPhail
+maintainer:             logan@nanobox.io
+copyright:              2018 Nanobox
+category:               DevOps
+build-type:             Simple
+cabal-version:          >=1.10
+extra-source-files:     README.md
 
 executable nbx
-  hs-source-dirs:      src
-  main-is:             Main.hs
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
-                       , text
-                       , turtle
-  GHC-Options:         -Wall
+  hs-source-dirs:       src
+  main-is:              Main.hs
+  default-language:     Haskell2010
+  build-depends:        base >= 4.7 && < 5
+                        , async
+                        , stm
+                        , text
+                        , turtle
+  other-modules:        Command
+                        , Concurrency
+                        , Format
+                        , Parse
+                        , Run
+  GHC-Options:          -Wall

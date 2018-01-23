@@ -2,15 +2,16 @@ module Run where
 
 import qualified Command   as C
 import qualified Data.Text as T
+import qualified Format    as F
 
 -- run a command
-command :: C.Command -> IO ()
-command cmd =
+command :: F.Formatter -> C.Command -> IO ()
+command formatter cmd =
   case cmd of
     C.Main ->
       mainCmd
     C.Init ->
-      initCmd
+      initCmd formatter
     C.Setup ->
       setupCmd
     C.Implode ->
@@ -55,8 +56,10 @@ runCmd cmd =
       "EXECUTE: " ++ T.unpack sub
 
 -- run the init command `nbx init`
-initCmd :: IO ()
-initCmd = putStrLn "INIT!"
+initCmd :: F.Formatter -> IO ()
+initCmd = -- putStrLn "INIT!"
+  demoFormatter -- TODO: remove
+
 
 -- run the setup command `nbx setup`
 setupCmd :: IO ()
@@ -73,3 +76,15 @@ statusCmd = putStrLn "STATUS!"
 -- display the version of the CLI
 versionCmd ::  IO ()
 versionCmd = putStrLn "NBX version 0.0.1"
+
+-- demo the formatter
+demoFormatter :: F.Formatter -> IO ()
+demoFormatter formatter = do
+  F.log formatter "hello"            -- send it some messages
+  F.indent formatter
+  F.log formatter "world"
+  F.indent formatter
+  F.log formatter "!!"
+  F.dedent formatter
+  F.dedent formatter
+  F.log formatter ":)"
