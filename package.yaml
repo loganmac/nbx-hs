@@ -23,10 +23,10 @@ dependencies:
 - async
 - base >= 4.7 && < 5
 - bytestring
-- conduit
-- conduit-extra
+- stm
 - text
 - turtle
+- typed-process
 
 # library:
 #   source-dirs: src
