@@ -1,30 +1,43 @@
-name:                   nbx
-version:                0.1.0.0
--- synopsis:
--- description:
-homepage:               https://github.com/loganmac/nbx#readme
-license:                BSD3
-license-file:           LICENSE
-author:                 Logan McPhail
-maintainer:             logan@nanobox.io
-copyright:              2018 Nanobox
-category:               DevOps
-build-type:             Simple
-cabal-version:          >=1.10
-extra-source-files:     README.md
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 5bd31d4f27af8cde8c7c20cb6b437761a44b85b9cb3ad19cee591aee3a06b958
+
+name:           nbx
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/loganmac/nbx#readme>
+homepage:       https://github.com/loganmac/nbx#readme
+bug-reports:    https://github.com/loganmac/nbx/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2018 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/loganmac/nbx
 
 executable nbx
-  hs-source-dirs:       src
-  main-is:              Main.hs
-  default-language:     Haskell2010
-  build-depends:        base >= 4.7 && < 5
-                        , async
-                        , stm
-                        , text
-                        , turtle
-  other-modules:        Command
-                        , Concurrency
-                        , Format
-                        , Parse
-                        , Run
-  GHC-Options:          -Wall
+  main-is: Main.hs
+  other-modules:
+      Command
+      Command.Parse
+      Process
+      Paths_nbx
+  hs-source-dirs:
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , text
+    , turtle
+    , typed-process
+  default-language: Haskell2010

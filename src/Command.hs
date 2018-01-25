@@ -1,14 +1,15 @@
 module Command where
 
-import qualified Data.Text as T
+import           Data.Text (Text)
 
 -- Top level command types
 data Command
   = Main
   | Init
+  | Push
+  | Status
   | Setup
   | Implode
-  | Status
   | Version
   | Modal Mode ModalCommand
 
@@ -23,8 +24,8 @@ data ModalCommand
   | Run RunCommand
 
 -- aliases for positional args
-type Target = T.Text
-type TargetCommand = T.Text
+type Target = Text
+type TargetCommand = Text
 
 -- a command under `run`, either with args or empty.
 data RunCommand
