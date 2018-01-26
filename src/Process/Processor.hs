@@ -3,13 +3,11 @@ module Process.Processor where
 import           Concurrency          (Chan, Lock, done, newChan, receive, send,
                                        spawn, wait, waitFor)
 import           Control.Monad        (unless)
-import qualified Data.ByteString      as B
+import           Data.ByteString      (ByteString, hGetLine)
 import           GHC.IO.Handle        (Handle)
 import           Process.Types        (Output (..), Processor (..))
 import           System.Exit          (ExitCode (..))
-import           System.IO            (BufferMode (..), hClose, hFlush,
-                                       hGetBuffering, hGetLine, hIsEOF,
-                                       hPutStrLn, hSetBuffering)
+import           System.IO            (BufferMode (..), hIsEOF)
 import           System.Process.Typed (Process, closed, createPipe, getStderr,
                                        getStdin, getStdout, setStderr, setStdin,
                                        setStdout, shell, waitExitCode,
@@ -44,12 +42,12 @@ run (Processor chan) cmd = do
     send chan $ toResult c
 
 
-handleOut :: Chan Output -> (B.ByteString -> Output) -> Handle -> Lock -> IO ()
+handleOut :: Chan Output -> (ByteString -> Output) -> Handle -> Lock -> IO ()
 handleOut chan wrap h lock = do
   let loop = do
         done <- hIsEOF h
         unless done $ do
-          out <- B.hGetLine h
+          out <- hGetLine h
           send chan $ wrap out
           loop
   loop
