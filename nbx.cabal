@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f3ab0e14a59905f1f96e6090e9fd32286b1cccfc23a2d683a1d0dd85b76b86e9
+-- hash: 59fa8a9bc2e9f5e74782fd4b9f3d6971deb6cfea7365e1072a60c70ddda12166
 
 name:           nbx
 version:        0.1.0.0
@@ -32,6 +32,9 @@ executable nbx
       Command.Parse
       Concurrency
       Process
+      Process.Formatter
+      Process.Processor
+      Process.Types
       Paths_nbx
   hs-source-dirs:
       src
@@ -41,6 +44,8 @@ executable nbx
     , base >=4.7 && <5
     , bytestring
     , stm
+    , streaming
+    , streaming-bytestring
     , text
     , turtle
     , typed-process

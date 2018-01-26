@@ -24,6 +24,8 @@ dependencies:
 - base >= 4.7 && < 5
 - bytestring
 - stm
+- streaming
+- streaming-bytestring
 - text
 - turtle
 - typed-process

@@ -1,79 +1,33 @@
-module Process where
+module Process
+(run, Processor(..), Output(..))
+where
 
-import           Concurrency          (Chan, newChan, receive, send, spawn)
-import           Control.Monad        (unless)
-import qualified Data.ByteString      as B
-import           GHC.IO.Handle        (Handle)
-import           System.Exit          (ExitCode (..))
-import           System.IO            (BufferMode (..), hClose, hFlush,
-                                       hGetBuffering, hGetLine, hIsEOF,
-                                       hPutStrLn, hSetBuffering)
-import           System.Process.Typed (Process, closed, createPipe, getStderr,
-                                       getStdin, getStdout, setStderr, setStdin,
-                                       setStdout, shell, waitExitCode,
-                                       withProcess)
-
-type Code = Int
-data Msg = Msg B.ByteString | Err B.ByteString | Success | Failure Code
+import           Concurrency           (Chan, receive, second, sleep, spawn)
+import qualified Data.ByteString.Char8 as BC
+import qualified Process.Formatter     as F
+import qualified Process.Processor     as P
+import           Process.Types         (Output (..), Processor (..))
 
 run :: String -> IO ()
 run cmd = do
-  processOutput <- newChan
+  processor <- P.init
+  _ <- spawn $ P.run processor cmd
+  handleProcessOutput processor
 
-  let config = setStdin closed
-             $ setStdout createPipe
-             $ setStderr createPipe
-             $ shell cmd
 
-  withProcess config $ \p -> do
-    _ <- spawn $ handleOut processOutput p
-    _ <- spawn $ handleErr processOutput p
-    _ <- spawn $ handleExit processOutput p
-    handleProcessOutput processOutput
-
-handleProcessOutput :: Chan Msg -> IO ()
-handleProcessOutput chan = do
+handleProcessOutput :: Processor -> IO ()
+handleProcessOutput (Processor chan) = do
   let loop = do
         msg <- receive chan
         case msg of
           Msg m     -> do
-            print m
+            putStrLn $ "\x1b[32;1m" ++ BC.unpack m ++ "\x1b[0m"
             loop
           Err m     -> do
-            print m
+            putStrLn $ "\x1b[31;7m" ++ BC.unpack m ++ "\x1b[0m"
             loop
           Success   ->
             putStrLn "Success! :)"
           Failure c ->
             putStrLn $ "Failure! :( " ++ show c
   loop
-
-
-handleOut :: Chan Msg -> Process stdin Handle stderr -> IO ()
-handleOut chan p = do
-  let loop = do
-        done <- hIsEOF (getStdout p)
-        unless done $ do
-          out <- B.hGetLine (getStdout p)
-          send chan $ Msg out
-          loop
-  loop
-
-handleErr :: Chan Msg -> Process stdin stdout Handle -> IO ()
-handleErr chan p = do
-  let loop = do
-        done <- hIsEOF (getStderr p)
-        unless done $ do
-          out <- B.hGetLine (getStderr p)
-          send chan $ Err out
-          loop
-  loop
-
-handleExit :: Chan Msg -> Process stdin stdout stderr -> IO ()
-handleExit chan p = do
-  let toResult x = case x of
-        ExitSuccess   -> Success
-        ExitFailure i -> Failure i
-
-  c <- waitExitCode p
-  send chan $ toResult c
