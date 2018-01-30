@@ -1,63 +1,82 @@
+{- | Wraps a few concurrency primitives in friendlier apis and names
+-}
 module Concurrency
-  ( Chan, Lock
-  , spawn, sleep, second
-  , newChan, receive, send
-  , wait, waitFor, done
+  ( Async, Chan, Lock
+  , spawn, sleep, second, millisecond
+  , newChan, receive, maybeReceive, send
+  , newLock, wait, done
   ) where
 
 import           Control.Concurrent       (MVar, newEmptyMVar, putMVar,
                                            takeMVar, threadDelay)
-import           Control.Concurrent.Async (Async, async, link)
+import           Control.Concurrent.Async (Async, async, cancel, link)
 import           Control.Concurrent.STM   (TQueue, atomically, newTQueue,
-                                           readTQueue, writeTQueue)
+                                           readTQueue, tryReadTQueue,
+                                           writeTQueue)
 
+--------------------------------------------------------------------------------
 -- THREADS
 
--- new async thread, linked to calling thread (will rethrow exceptions on linked thread)
+-- | new async thread, linked to calling thread (will rethrow exceptions on linked thread)
 spawn :: IO a -> IO (Async a)
 spawn x = do
   thread <- async x
   link thread
   pure thread
 
--- thread sleep
-sleep :: Int -> Int -> IO ()
-sleep n measure = threadDelay (n * measure)
+-- | A unit of time to sleep
+newtype TimeUnit = TimeUnit Int
 
--- one second
-second :: Int
-second = 1000000
+-- | thread sleep a multiple of seconds
+sleep :: Int -> TimeUnit -> IO ()
+sleep n (TimeUnit measure) = threadDelay $ n * measure
 
+-- | one second
+second :: TimeUnit
+second = TimeUnit 1000000
+
+-- | one millisecond
+millisecond :: TimeUnit
+millisecond = TimeUnit 1000
+
+
+--------------------------------------------------------------------------------
 -- CHANNELS
 
--- a Channel
+-- | a Channel
 type Chan a = TQueue a
 
--- create a new channel
+-- | create a new channel
 newChan :: IO (Chan a)
 newChan = atomically newTQueue
 
--- read from the channel
+-- | read from the channel, blocking with retry
 receive :: Chan a -> IO a
 receive x = atomically $ readTQueue x
 
--- write to the channel
+-- | try to read from the channel, returning Nothing if no value available
+maybeReceive :: Chan a -> IO (Maybe a)
+maybeReceive x = atomically $ tryReadTQueue x
+
+-- | write to the channel
 send :: Chan a -> a -> IO ()
 send x y = atomically $ writeTQueue x y
 
-
+--------------------------------------------------------------------------------
 -- LOCKS
+
+-- | A lock
 type Lock = MVar ()
 
--- create a new lock
-wait :: IO Lock
-wait = newEmptyMVar
+-- | create a new lock
+newLock :: IO Lock
+newLock = newEmptyMVar
 
--- take the lock, "waiting for" it
-waitFor :: Lock -> IO ()
-waitFor = takeMVar
+-- | take the lock, "waiting for" it
+wait :: Lock -> IO ()
+wait = takeMVar
 
--- close the lock
+-- | close the lock
 done :: Lock -> IO ()
 done x = putMVar x ()
 

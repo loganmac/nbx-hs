@@ -20,12 +20,11 @@ extra-source-files:
 description:         Please see the README on Github at <https://github.com/loganmac/nbx#readme>
 
 dependencies:
+- ansi-terminal
 - async
 - base >= 4.7 && < 5
 - bytestring
 - stm
-- streaming
-- streaming-bytestring
 - text
 - turtle
 - typed-process

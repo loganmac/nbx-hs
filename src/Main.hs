@@ -2,49 +2,42 @@
 
 module Main where
 
-import           Command       (Command (..), ModalCommand (..), Mode,
-                                RunCommand (..))
-import qualified Command.Parse as Parse
-import           Data.Text     (Text, unpack)
-import qualified Process
+import           Command               (Command (..), parse)
+import qualified Data.ByteString.Char8 as BC
+import           Data.Text             (Text, unpack)
+import qualified Print
+import qualified Processor             as P
 
 main :: IO ()
 main = do
   -- here we would do things like check the config,
   -- read .nbx.yml, etc.
-  cmd <- Parse.command
-  execute cmd
+  processor <- P.new
+  cmd       <- parse
+  execute processor cmd
 
--- execute a command
-execute :: Command -> IO ()
-execute cmd =
+-- | execute a command
+execute :: P.Processor -> Command -> IO ()
+execute processor cmd =
   case cmd of
-    Main           -> putStrLn "For help, run 'nbx -h'."
-    Init           -> putStrLn "INIT!"
-    Push           -> Process.run "npm i -g vue-cli" --putStrLn "PUSH!"
-    Status         -> putStrLn "STATUS!"
-    Setup          -> putStrLn "SETUP!"
-    Implode        -> putStrLn "IMPLODE!"
-    Version        -> putStrLn "NBX version 0.0.1"
-    Modal mode sub -> modalCmd mode sub
+    Main    -> putStrLn "For help, run 'nbx -h'."
+    Init    -> putStrLn "INIT!"
+    Push    -> pushCmd processor
+    Status  -> putStrLn "STATUS!"
+    Setup   -> putStrLn "SETUP!"
+    Implode -> putStrLn "IMPLODE!"
+    Version -> putStrLn "NBX version 0.0.1"
 
--- run a modal subcommand like `nbx dev logs`
-modalCmd :: Mode -> ModalCommand -> IO ()
-modalCmd mode cmd =
-  putStrLn $
-  "MODE: " ++
-  show mode ++
-  "\n" ++
-  case cmd of
-    Logs    -> "LOGS!"
-    Destroy -> "DESTROY!"
-    Run sub -> runCmd sub
+-- | run the push command
+-- > nbx push
+pushCmd :: P.Processor -> IO ()
+pushCmd processor = do
+  let task = P.run processor
 
--- a modal run subcommand like `nbx dev run`
-runCmd :: RunCommand -> String
-runCmd cmd =
-  case cmd of
-    Start               -> "START!"
-    Console target      -> "CONSOLE: " ++ unpack target
-    Execute target sub  -> "TARGET: " ++ unpack target ++ "\n" ++ "EXECUTE: " ++ unpack sub
+  Print.header "Setting Up Concert"
+
+  task "Preparing show"   "./test-scripts/good.sh"
+  task "Setting up stage" "./test-scripts/good.sh"
+  task "Inviting guests"  "./test-scripts/good.sh"
+  task "Starting show"    "./test-scripts/bad.sh"
 
