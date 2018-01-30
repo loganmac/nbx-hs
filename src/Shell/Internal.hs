@@ -39,9 +39,9 @@ processor (Processor input output) =
 -- | executes the given command in the processor
 run :: Processor -> DisplayDriver -> Task -> Cmd -> IO ()
 run (Processor input output) printer task cmd = do
-  send input cmd
-  now <- getPOSIXTime
-  loop 0 (now - 0.5) [] -- start the loop with position 0, last spin 0.5 seconds ago.
+  send input cmd  -- send the command to the Processor thread
+
+  loop 0 0 []     -- start the output loop with spinner zeroed out
 
   where
     -- setup the DisplayDriver aliases
