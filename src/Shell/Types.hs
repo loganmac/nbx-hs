@@ -1,6 +1,6 @@
 module Shell.Types where
 
-import           Concurrency (Chan)
+import           Shell.Concurrency (Chan)
 
 -- | DisplayDriver is a collection of functions that
 -- describe what to do on process output
@@ -11,7 +11,7 @@ data DisplayDriver = DisplayDriver
   , printOutput  :: String -> IO ()
   , printSuccess :: String -> IO ()
   , printFailure :: String -> [String] -> IO ()
-  , printWait    :: IO ()
+  , toSpinner    :: IO ()
   }
 
 -- | The output of running an external process

@@ -2,7 +2,6 @@
 -}
 module Print where
 
-import           Concurrency         (millisecond, sleep)
 import           Control.Monad       (forM_)
 import qualified System.Console.ANSI as Term
 
@@ -21,10 +20,6 @@ taskIndent = spaces 4
 taskOutputIndent :: String
 taskOutputIndent = spaces 6
 
--- | how many milliseconds between spinner frames
-spinnerInterval :: Int
-spinnerInterval = 50
-
 -- | a string with the given number of spaces
 spaces :: Int -> String
 spaces n = replicate n ' '
@@ -36,7 +31,7 @@ spaces n = replicate n ' '
 header :: String -> IO ()
 header s = do
   putStrLn ""
-  putStrLn $ headerIndent ++ (blueBold $ s ++ " :")
+  putStrLn $ headerIndent ++ blueBold (s ++ " :")
   putStrLn ""
 
 -- | Prints a spinner next to the given prompt
@@ -45,7 +40,7 @@ spinner pos prompt = do
   putStr taskIndent
   putStrLn $
     yellowBold $
-      theme !! (mod pos $ length theme) : ' ' : (yellowUnderline prompt)
+      theme !! mod pos (length theme) : ' ' : yellowUnderline prompt
   putStrLn ""
   where
     theme = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
@@ -69,7 +64,7 @@ failure :: String -> [String] -> IO ()
 failure str buffer = do
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
   putStrLn $ "\n" ++ headerIndent ++
-    (bold $ redReverse $ "Error executing task '" ++ str ++ "':\n")
+    bold (redReverse $ "Error executing task '" ++ str ++ "':\n")
   forM_ (reverse buffer) printBufferLine
   where
     printBufferLine x = putStrLn $ taskIndent ++ x
@@ -106,14 +101,6 @@ strip =
   where
     nonAlpha x = let o = fromEnum x in o > 31 && o < 126
 
---------------------------------------------------------------------------------
--- WAIT
-
--- | go to the spinner, then wait
-wait :: IO ()
-wait = do
- toSpinner
- sleep spinnerInterval millisecond
 
 --------------------------------------------------------------------------------
 -- FORMATTING
@@ -175,9 +162,9 @@ reversed = style Default Default Reverse
 -- | Wrap the text in the escape codes to format according to the color and style
 style :: Color -> Color -> Style -> String -> String
 style foreground background style str =
-    "\x1b[9" ++                               -- escape code
-    (show $ fromEnum foreground) ++           -- foreground color
-    ";4" ++ (show $ fromEnum background) ++   -- background color
-    ";" ++ (show $ fromEnum style) ++ "m" ++  -- style
-    str ++                                    -- string
-    "\x1b[0m"                                 -- reset
+    "\x1b[9" ++                             -- escape code
+    show (fromEnum foreground) ++           -- foreground color
+    ";4" ++ show (fromEnum background) ++   -- background color
+    ";" ++ show (fromEnum style) ++ "m" ++  -- style
+    str ++                                  -- string
+    "\x1b[0m"                               -- reset

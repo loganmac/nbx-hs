@@ -5,11 +5,12 @@
 -}
 module Shell.Internal where
 
-import           Concurrency           (Chan, Lock, done, maybeReceive, newLock,
-                                        receive, send, spawn, wait)
 import           Control.Monad         (unless)
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import           GHC.IO.Handle         (Handle)
+import           Shell.Concurrency     (Chan, Lock, done, maybeReceive,
+                                        millisecond, newChan, newLock, receive,
+                                        send, sleep, spawn, wait)
 import           Shell.Types           (Cmd, DisplayDriver (..), Output (..),
                                         Processor (..), Task)
 import qualified Shell.Types           as DisplayDriver
@@ -19,6 +20,17 @@ import           System.Process.Typed  (Process, closed, createPipe, getStderr,
                                         getStdout, setStderr, setStdin,
                                         setStdout, shell, waitExitCode,
                                         withProcess)
+
+--------------------------------------------------------------------------------
+-- CREATE PROCESSOR
+
+mkProcessor :: IO Processor
+mkProcessor = do
+  input  <- newChan
+  output <- newChan
+  let p = Processor input output
+  _ <- spawn $ processor p
+  pure p
 
 --------------------------------------------------------------------------------
 -- LOOP
@@ -45,13 +57,13 @@ run (Processor input output) printer task cmd = do
 
   where
     -- setup the DisplayDriver functions from the printer
-    spinner       = DisplayDriver.spinner       printer
-    formatOut     = DisplayDriver.formatOut     printer
-    formatErr     = DisplayDriver.formatErr     printer
-    printOutput   = DisplayDriver.printOutput   printer
-    printSuccess  = DisplayDriver.printSuccess  printer
-    printFailure  = DisplayDriver.printFailure  printer
-    printWait     = DisplayDriver.printWait     printer
+    spinner        = DisplayDriver.spinner       printer
+    formatOut      = DisplayDriver.formatOut     printer
+    formatErr      = DisplayDriver.formatErr     printer
+    printOutput    = DisplayDriver.printOutput   printer
+    printSuccess   = DisplayDriver.printSuccess  printer
+    printFailure   = DisplayDriver.printFailure  printer
+    toSpinner      = DisplayDriver.toSpinner     printer
 
     loop :: Int -> POSIXTime -> [String] -> IO ()
     loop lastSpinPos lastSpinTime buffer = do
@@ -89,7 +101,8 @@ run (Processor input output) printer task cmd = do
 
         handleNoMsg :: Int -> POSIXTime -> IO ()
         handleNoMsg spinPos spinTime = do
-            printWait
+            sleep 50 millisecond
+            toSpinner
             loop spinPos spinTime buffer
 
 --------------------------------------------------------------------------------

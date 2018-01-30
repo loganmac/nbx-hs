@@ -4,19 +4,14 @@ module Shell
 (new, Shell, DisplayDriver(..))
 where
 
-import           Concurrency    (Chan, Lock, done, maybeReceive, millisecond,
-                                 newChan, newLock, receive, second, send, sleep,
-                                 spawn, wait)
-import           Shell.Internal (processor, run)
+import           Shell.Internal (mkProcessor, processor, run)
 import           Shell.Types    (Cmd, DisplayDriver (..), Output (..),
                                  Processor (..), Shell, Task)
 
 -- | creates a new processor to run external processes in,
--- then partially applies it to `Shell.Internal.run`, returing a `Shell`
+-- then partially applies it and the display driver
+-- to `Shell.Internal.run`, returing a `Shell`
 new :: DisplayDriver -> IO Shell
 new printer = do
-  input <- newChan
-  output <- newChan
-  let p = Processor input output
-  _ <- spawn $ processor p
+  p <- mkProcessor
   pure $ run p printer

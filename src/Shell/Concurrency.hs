@@ -1,6 +1,6 @@
 {- | Wraps a few concurrency primitives in friendlier apis and names
 -}
-module Concurrency
+module Shell.Concurrency
   ( Async, Chan, Lock
   , spawn, sleep, second, millisecond
   , newChan, receive, maybeReceive, send
