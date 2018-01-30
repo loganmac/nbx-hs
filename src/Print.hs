@@ -7,13 +7,17 @@ import qualified System.Console.ANSI as Term
 --------------------------------------------------------------------------------
 -- CONSTANTS
 
+-- | indentaion to use before a header
+headerIndent :: String
+headerIndent = spaces 2
+
 -- | indentation to use before a task
 taskIndent :: String
-taskIndent = spaces 2
+taskIndent = spaces 4
 
 -- | indentation to use before the output of a task
 taskOutputIndent :: String
-taskOutputIndent = spaces 3
+taskOutputIndent = spaces 6
 
 -- | how many milliseconds between spinner frames
 spinnerInterval :: Int
@@ -30,7 +34,7 @@ spaces n = replicate n ' '
 header :: String -> IO ()
 header s = do
   putStrLn ""
-  putStrLn $ blueBold $ s ++ " :"
+  putStrLn $ headerIndent ++ (blueBold $ s ++ " :")
   putStrLn ""
 
 -- | Prints a spinner next to the given prompt
@@ -61,12 +65,12 @@ success str =
 -- | Prints the message as a failure (red with an x)
 failure :: String -> [String] -> IO ()
 failure str buffer = do
-  let printBufferLine x = putStrLn $ " " ++ taskOutputIndent ++ x
-      printBuffer b = forM_ b printBufferLine
-
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
-  putStrLn $ "\n" ++ taskOutputIndent ++ " " ++ (redReverse $ "Error " ++ str ++ ":")
-  printBuffer buffer
+  putStrLn $ "\n" ++ headerIndent ++
+    (redReverse $ "Error executing task '" ++ str ++ "':\n")
+  forM_ buffer printBufferLine
+  where
+    printBufferLine x = putStrLn $ taskIndent ++ x
 
 -- | clears the spinner then prints the string in its place
 printResult :: String -> IO ()

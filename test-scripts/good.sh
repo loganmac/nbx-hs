@@ -3,7 +3,7 @@
 
 # print with formatting
 p () {
-  printf '\x1b[35;1m %s \x1b[0m\n' "$@"
+  echo "$@"
   sleep 0.3
 }
 

@@ -34,10 +34,14 @@ pushCmd :: P.Processor -> IO ()
 pushCmd processor = do
   let task = P.run processor
 
-  Print.header "Setting Up Concert"
+  Print.header "Setting up concert"
 
   task "Preparing show"   "./test-scripts/good.sh"
   task "Setting up stage" "./test-scripts/good.sh"
   task "Inviting guests"  "./test-scripts/good.sh"
+
+  Print.header "Let the show begin"
+
+  task "Opening gates"    "./test-"
   task "Starting show"    "./test-scripts/bad.sh"
 

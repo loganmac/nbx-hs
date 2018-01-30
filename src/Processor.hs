@@ -10,6 +10,7 @@ import           Concurrency        (Chan, Lock, done, maybeReceive,
 import qualified Print
 import           Processor.Internal (processor)
 import           Processor.Types    (Cmd, Output (..), Processor (..), Task)
+import           System.Exit        (ExitCode (..), exitWith)
 
 -- | creates a new processor
 new :: IO Processor
@@ -35,14 +36,15 @@ run (Processor input output) task cmd = do
         handleMsg msg = case msg of
           Msg m -> do
             let out = Print.out m
-            Print.output out >> loop (i + 1) (out : buffer)
+            Print.output out >> loop (i + 1) (buffer ++ [out])
           Err m -> do
             let err = Print.err m
-            Print.output err >> loop (i + 1) (err : buffer)
+            Print.output err >> loop (i + 1) (buffer ++ [err])
           Success ->
             Print.success task
-          Failure c ->
+          Failure c -> do
             Print.failure task buffer
+            exitWith $ ExitFailure c
         handleNoMsg =
             Print.wait  >> loop (i + 1) buffer
 

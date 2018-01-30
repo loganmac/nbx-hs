@@ -7,13 +7,13 @@ sleepy () {
 
 # print with formatting
 p () {
-  printf '\x1b[35;1m %s \x1b[0m\n' "$@"
+  echo "$@"
   sleepy
 }
 
 # print with formatting to stderr
 pe () {
-  printf '\x1b[33;1m %s \x1b[0m\n' "$@" >&2
+  echo "$@" >&2
   sleepy
 }
 
