@@ -10,13 +10,13 @@ main = do
                               -- here we would do things like check the config,
                               -- read .nbx.yml, etc.
   let printer = Shell.DisplayDriver
-        { Shell.formatterOut   = Print.out
-        , Shell.formatterErr   = Print.err
-        , Shell.printerSpinner = Print.spinner
-        , Shell.printerOutput  = Print.output
-        , Shell.printerSuccess = Print.success
-        , Shell.printerFailure = Print.failure
-        , Shell.printerWait    = Print.wait
+        { Shell.formatOut    = Print.out
+        , Shell.formatErr    = Print.err
+        , Shell.spinner      = Print.spinner
+        , Shell.printOutput  = Print.output
+        , Shell.printSuccess = Print.success
+        , Shell.printFailure = Print.failure
+        , Shell.printWait    = Print.wait
         }
   shell <- Shell.new printer  -- create a way to run external processes
   cmd   <- parse              -- parse the command from the CLI
