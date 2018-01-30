@@ -70,7 +70,7 @@ failure str buffer = do
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
   putStrLn $ "\n" ++ headerIndent ++
     (bold $ redReverse $ "Error executing task '" ++ str ++ "':\n")
-  forM_ buffer printBufferLine
+  forM_ (reverse buffer) printBufferLine
   where
     printBufferLine x = putStrLn $ taskIndent ++ x
 
@@ -123,7 +123,9 @@ data Color = Black | Red | Green | Yellow | Blue | Magenta | Cyan | White | Defa
   deriving (Enum)
 
 -- | SGR paramaters, aka text styles for an ANSI terminal
-data Style = Normal | Bold | Faint | Italic | Underline | SlowBlink | ColoredNormal | Reverse
+data Style
+  = Normal | Bold | Faint | Italic
+  | Underline | SlowBlink | ColoredNormal | Reverse
   deriving (Enum)
 
 -- | Helper to make a text green & bold
@@ -167,8 +169,8 @@ bold :: String -> String
 bold = style Default Default Bold
 
 -- | Helper to reverse
-reverse :: String -> String
-reverse = style Default Default Reverse
+reversed :: String -> String
+reversed = style Default Default Reverse
 
 -- | Wrap the text in the escape codes to format according to the color and style
 style :: Color -> Color -> Style -> String -> String

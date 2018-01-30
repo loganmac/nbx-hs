@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-for i in {1..600}
+for i in {1..1000}
 do
   printf "installing package #%s...\n" $i
-  sleep 0.01
+  sleep 0.001
 done
 printf "\n"
