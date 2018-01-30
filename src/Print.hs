@@ -8,6 +8,10 @@ import qualified System.Console.ANSI as Term
 --------------------------------------------------------------------------------
 -- CONSTANTS
 
+-- | Characters to use for the spinner
+spinnerTheme :: String
+spinnerTheme = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
 -- | indentaion to use before a header
 headerIndent :: String
 headerIndent = spaces 2
@@ -25,7 +29,25 @@ spaces :: Int -> String
 spaces n = replicate n ' '
 
 --------------------------------------------------------------------------------
--- HEADER/SPINNER
+-- SPINNER
+
+-- | Prints a spinner next to the given prompt
+spinner :: Int -> String -> IO ()
+spinner pos prompt = do
+  putStr taskIndent
+  putStrLn $
+    yellowBold $
+      spinnerTheme !! mod pos (length spinnerTheme) : ' ' : yellowUnderline prompt
+  putStrLn ""
+
+-- | Move to the spinner
+toSpinner :: IO ()
+toSpinner = do
+  Term.cursorUpLine 2
+  Term.setCursorColumn 0
+
+--------------------------------------------------------------------------------
+-- HEADER
 
 -- | Prints a header that describes a group of tasks
 header :: String -> IO ()
@@ -34,22 +56,6 @@ header s = do
   putStrLn $ headerIndent ++ blueBold (s ++ " :")
   putStrLn ""
 
--- | Prints a spinner next to the given prompt
-spinner :: Int -> String -> IO ()
-spinner pos prompt = do
-  putStr taskIndent
-  putStrLn $
-    yellowBold $
-      theme !! mod pos (length theme) : ' ' : yellowUnderline prompt
-  putStrLn ""
-  where
-    theme = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-
--- | Move to the spinner
-toSpinner :: IO ()
-toSpinner = do
-  Term.cursorUpLine 2
-  Term.setCursorColumn 0
 
 --------------------------------------------------------------------------------
 -- RESULTS
@@ -63,7 +69,7 @@ success str =
 failure :: String -> [String] -> IO ()
 failure str buffer = do
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
-  putStrLn $ "\n" ++ headerIndent ++
+  putStrLn $ "\n\n" ++ headerIndent ++
     bold (redReverse $ "Error executing task '" ++ str ++ "':\n")
   forM_ (reverse buffer) printBufferLine
   where
@@ -95,6 +101,7 @@ out = lightGreen . strip
 err :: String -> String
 err = lightRed . strip
 
+-- | removes terminal control sequences from the string
 strip :: String -> String
 strip =
   filter nonAlpha

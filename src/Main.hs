@@ -36,15 +36,15 @@ pushCmd shell = do
 
   Print.header "Setting up concert"
 
-  shell "Preparing show"   "./test-scripts/noisy-good.sh"
-  shell "Setting up stage" "./test-scripts/good.sh"
-  shell "Inviting guests"  "./test-scripts/good.sh"
+  shell "Preparing show"   "./test-scripts/bash/noisy-good.sh"
+  shell "Setting up stage" "./test-scripts/bash/good.sh"
+  shell "Inviting guests"  "./test-scripts/bash/good.sh"
 
   Print.header "Let the show begin"
 
-  shell "Opening gates" "./test-scripts/good.sh"
-  shell "Starting show" "./test-scripts/bad.sh"
-  shell "Shouldn't run" "./test-scripts/good.sh"
+  shell "Opening gates" "./test-scripts/bash/good.sh"
+  shell "Starting show" "./test-scripts/bash/bad.sh"
+  shell "Shouldn't run" "./test-scripts/bash/good.sh"
 
 --------------------------------------------------------------------------------
 -- SHELL DISPLAY DRIVER

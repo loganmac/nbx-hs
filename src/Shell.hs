@@ -1,4 +1,5 @@
-{-| Processor is a thread that runs external processes, and can await the response.
+{-| Shell is a thread that runs external processes, and can do things
+based on the response.
 -}
 module Shell
 (new, Shell, DisplayDriver(..))
