@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1a2103689bdcd73e6b8675f0f4bdee922faf52084b4b98fb8791c1e32a3d18ef
+-- hash: 1ea76921c2e23fc1e3ccd6b470ad74787aa9df6423418e5b4aa1f6b8992f21ba
 
 name:           nbx
 version:        0.1.0.0
@@ -45,6 +45,7 @@ executable nbx
     , bytestring
     , stm
     , text
+    , time
     , turtle
     , typed-process
   default-language: Haskell2010

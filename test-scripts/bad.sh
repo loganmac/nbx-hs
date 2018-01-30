@@ -6,6 +6,10 @@ p () {
   sleep 0.3
 }
 
+echo "setting up stage"
+sleep 0.3
+echo "finding stage..."
+sleep 0.3
 p "there is no stage"
 p "who was supposed to bring drums"
 p "these amps have EU plugs"

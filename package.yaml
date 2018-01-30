@@ -26,6 +26,7 @@ dependencies:
 - bytestring
 - stm
 - text
+- time
 - turtle
 - typed-process
 

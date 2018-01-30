@@ -44,8 +44,8 @@ spinner :: Int -> String -> IO ()
 spinner pos prompt = do
   putStr taskIndent
   putStrLn $
-    blueReverse $
-      theme !! (mod pos $ length theme) : ' ' : (prompt ++ " :")
+    yellowBold $
+      theme !! (mod pos $ length theme) : ' ' : (yellowUnderline prompt)
   putStrLn ""
   where
     theme = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
@@ -69,7 +69,7 @@ failure :: String -> [String] -> IO ()
 failure str buffer = do
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
   putStrLn $ "\n" ++ headerIndent ++
-    (redReverse $ "Error executing task '" ++ str ++ "':\n")
+    (bold $ redReverse $ "Error executing task '" ++ str ++ "':\n")
   forM_ buffer printBufferLine
   where
     printBufferLine x = putStrLn $ taskIndent ++ x
@@ -123,7 +123,7 @@ data Color = Black | Red | Green | Yellow | Blue | Magenta | Cyan | White | Defa
   deriving (Enum)
 
 -- | SGR paramaters, aka text styles for an ANSI terminal
-data Style = Normal | Bold | Faint | Italic | Underline | SlowBlink | RapidBlink | Reverse
+data Style = Normal | Bold | Faint | Italic | Underline | SlowBlink | ColoredNormal | Reverse
   deriving (Enum)
 
 -- | Helper to make a text green & bold
@@ -136,23 +136,39 @@ redBold = style Red Default Bold
 
 -- | Helper for light green text
 lightGreen :: String -> String
-lightGreen = style Green Default Faint
+lightGreen = style Default Default Faint
 
 -- | Helper for light red text
 lightRed :: String -> String
-lightRed = style Red Default Faint
+lightRed = style Red Default ColoredNormal
 
 -- | Helper to make a text blue & bold
 blueBold :: String -> String
-blueBold = style Blue Default Bold
+blueBold = style Cyan Default Bold
 
 -- | Help to make a text background red and foreground the background color
 redReverse :: String -> String
 redReverse = style Red Default Reverse
 
--- | Help to make a text background blue and foreground black
-blueReverse :: String -> String
-blueReverse = style Yellow Default Underline
+-- | Help to make a text background yellow and underlined
+yellowUnderline :: String -> String
+yellowUnderline = style Yellow Default Underline
+
+-- | Help to make a text background yellow and bold
+yellowBold :: String -> String
+yellowBold = style Yellow Default Bold
+
+-- | Helper to underline
+underline :: String -> String
+underline = style Default Default Underline
+
+-- | Helper to bold
+bold :: String -> String
+bold = style Default Default Bold
+
+-- | Helper to reverse
+reverse :: String -> String
+reverse = style Default Default Reverse
 
 -- | Wrap the text in the escape codes to format according to the color and style
 style :: Color -> Color -> Style -> String -> String

@@ -5,19 +5,20 @@
 -}
 module Shell.Internal where
 
-import           Concurrency          (Chan, Lock, done, maybeReceive, newLock,
-                                       receive, send, spawn, wait)
-import           Control.Monad        (unless)
-import           GHC.IO.Handle        (Handle)
-import           Shell.Types          (Cmd, DisplayDriver (..), Output (..),
-                                       Processor (..), Task)
-import qualified Shell.Types          as DisplayDriver
-import           System.Exit          (ExitCode (..), exitWith)
-import           System.IO            (hGetLine, hIsEOF)
-import           System.Process.Typed (Process, closed, createPipe, getStderr,
-                                       getStdout, setStderr, setStdin,
-                                       setStdout, shell, waitExitCode,
-                                       withProcess)
+import           Concurrency           (Chan, Lock, done, maybeReceive, newLock,
+                                        receive, send, spawn, wait)
+import           Control.Monad         (unless)
+import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
+import           GHC.IO.Handle         (Handle)
+import           Shell.Types           (Cmd, DisplayDriver (..), Output (..),
+                                        Processor (..), Task)
+import qualified Shell.Types           as DisplayDriver
+import           System.Exit           (ExitCode (..), exitWith)
+import           System.IO             (hGetLine, hIsEOF)
+import           System.Process.Typed  (Process, closed, createPipe, getStderr,
+                                        getStdout, setStderr, setStdin,
+                                        setStdout, shell, waitExitCode,
+                                        withProcess)
 
 --------------------------------------------------------------------------------
 -- LOOP
@@ -39,7 +40,8 @@ processor (Processor input output) =
 run :: Processor -> DisplayDriver -> Task -> Cmd -> IO ()
 run (Processor input output) printer task cmd = do
   send input cmd
-  loop 0 []
+  now <- getPOSIXTime
+  loop 0 (now - 0.5) [] -- start the loop with position 0, last spin 0.5 seconds ago.
 
   where
     -- setup the DisplayDriver aliases
@@ -51,34 +53,44 @@ run (Processor input output) printer task cmd = do
     printFailure  = DisplayDriver.printFailure printer
     printWait     = DisplayDriver.printWait printer
 
-    loop :: Int -> [String] -> IO ()
-    loop i buffer = do
-      spinner i task
+    loop :: Int -> POSIXTime -> [String] -> IO ()
+    loop lastSpinPos lastSpinTime buffer = do
+      -- print the spinner
+      spinner lastSpinPos task
+
+      -- get the current time
+      now <- getPOSIXTime
+
+      -- if it's been 0.5 seconds, advance the spinner
+      let (spinPos, spinTime) =
+            if now - lastSpinTime >= 0.1 then (lastSpinPos+1, now)
+            else (lastSpinPos, lastSpinTime)
+
       out <- maybeReceive output
-      maybe handleNoMsg handleMsg out
+      maybe (handleNoMsg spinPos spinTime) (handleMsg spinPos spinTime) out
 
       where
 
-        handleMsg :: Output -> IO ()
-        handleMsg msg = case msg of
+        handleMsg :: Int -> POSIXTime -> Output -> IO ()
+        handleMsg spinPos spinTime msg = case msg of
           Msg m -> do
             let out = formatOut m
             printOutput out
-            loop (i + 1) (buffer ++ [out])
+            loop spinPos spinTime (buffer ++ [out])
           Err m -> do
             let err = formatErr m
             printOutput err
-            loop (i + 1) (buffer ++ [err])
+            loop spinPos spinTime (buffer ++ [err])
           Success ->
             printSuccess task
           Failure c -> do
             printFailure task buffer
             exitWith $ ExitFailure c
 
-        handleNoMsg :: IO ()
-        handleNoMsg = do
+        handleNoMsg :: Int -> POSIXTime -> IO ()
+        handleNoMsg spinPos spinTime = do
             printWait
-            loop (i + 1) buffer
+            loop spinPos spinTime buffer
 
 --------------------------------------------------------------------------------
 -- | RESPOND TO RUN COMMAND

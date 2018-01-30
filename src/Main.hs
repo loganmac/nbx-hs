@@ -41,12 +41,12 @@ pushCmd shell = do
 
   Print.header "Setting up concert"
 
-  shell "Preparing show"   "./test-scripts/good.sh"
+  shell "Preparing show"   "./test-scripts/noisy-good.sh"
   shell "Setting up stage" "./test-scripts/good.sh"
   shell "Inviting guests"  "./test-scripts/good.sh"
 
   Print.header "Let the show begin"
 
   shell "Opening gates" "./test-scripts/good.sh"
-  shell "Starting show" "./test-scripts/good-then-bad.sh"
+  shell "Starting show" "./test-scripts/bad.sh"
   shell "Shouldn't run" "./test-scripts/good.sh"
