@@ -10,10 +10,8 @@ import           Concurrency          (Chan, Lock, done, maybeReceive, newLock,
 import           Control.Monad        (unless)
 import           GHC.IO.Handle        (Handle)
 import           Shell.Types          (Cmd, DisplayDriver (..), Output (..),
-                                       Processor (..), Task, formatterErr,
-                                       formatterOut, printerFailure,
-                                       printerOutput, printerSpinner,
-                                       printerSuccess, printerWait)
+                                       Processor (..), Task)
+import qualified Shell.Types          as DisplayDriver
 import           System.Exit          (ExitCode (..), exitWith)
 import           System.IO            (hGetLine, hIsEOF)
 import           System.Process.Typed (Process, closed, createPipe, getStderr,
@@ -45,13 +43,13 @@ run (Processor input output) printer task cmd = do
 
   where
     -- setup the DisplayDriver aliases
-    spinner       = printerSpinner printer
-    formatOut     = formatterOut printer
-    formatError   = formatterErr printer
-    printOutput   = printerOutput printer
-    printSuccess  = printerSuccess printer
-    printFailure  = printerFailure printer
-    printWait     = printerWait printer
+    spinner       = DisplayDriver.spinner printer
+    formatOut     = DisplayDriver.formatOut printer
+    formatErr     = DisplayDriver.formatErr printer
+    printOutput   = DisplayDriver.printOutput printer
+    printSuccess  = DisplayDriver.printSuccess printer
+    printFailure  = DisplayDriver.printFailure printer
+    printWait     = DisplayDriver.printWait printer
 
     loop :: Int -> [String] -> IO ()
     loop i buffer = do
@@ -68,7 +66,7 @@ run (Processor input output) printer task cmd = do
             printOutput out
             loop (i + 1) (buffer ++ [out])
           Err m -> do
-            let err = formatError m
+            let err = formatErr m
             printOutput err
             loop (i + 1) (buffer ++ [err])
           Success ->

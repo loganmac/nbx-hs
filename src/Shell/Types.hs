@@ -5,13 +5,13 @@ import           Concurrency (Chan)
 -- | DisplayDriver is a collection of functions that
 -- describe what to do on process output
 data DisplayDriver = DisplayDriver
-  { formatterOut   :: String -> String
-  , formatterErr   :: String -> String
-  , printerSpinner :: Int -> String -> IO ()
-  , printerOutput  :: String -> IO ()
-  , printerSuccess :: String -> IO ()
-  , printerFailure :: String -> [String] -> IO ()
-  , printerWait    :: IO ()
+  { formatOut    :: String -> String
+  , formatErr    :: String -> String
+  , spinner      :: Int -> String -> IO ()
+  , printOutput  :: String -> IO ()
+  , printSuccess :: String -> IO ()
+  , printFailure :: String -> [String] -> IO ()
+  , printWait    :: IO ()
   }
 
 -- | The output of running an external process
