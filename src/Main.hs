@@ -1,28 +1,34 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Main where
 
-import           Command               (Command (..), parse)
-import qualified Data.ByteString.Char8 as BC
-import           Data.Text             (Text, unpack)
+import           Command (Command (..), parse)
 import qualified Print
-import qualified Processor             as P
+import           Shell   (Shell)
+import qualified Shell
 
 main :: IO ()
 main = do
-  -- here we would do things like check the config,
-  -- read .nbx.yml, etc.
-  processor <- P.new
-  cmd       <- parse
-  execute processor cmd
+                              -- here we would do things like check the config,
+                              -- read .nbx.yml, etc.
+  let printer = Shell.DisplayDriver
+        { Shell.formatterOut   = Print.out
+        , Shell.formatterErr   = Print.err
+        , Shell.printerSpinner = Print.spinner
+        , Shell.printerOutput  = Print.output
+        , Shell.printerSuccess = Print.success
+        , Shell.printerFailure = Print.failure
+        , Shell.printerWait    = Print.wait
+        }
+  shell <- Shell.new printer  -- create a way to run external processes
+  cmd   <- parse              -- parse the command from the CLI
+  execute shell cmd           -- execute it, passing the shell and command
 
 -- | execute a command
-execute :: P.Processor -> Command -> IO ()
-execute processor cmd =
+execute :: Shell -> Command -> IO ()
+execute shell cmd =
   case cmd of
     Main    -> putStrLn "For help, run 'nbx -h'."
     Init    -> putStrLn "INIT!"
-    Push    -> pushCmd processor
+    Push    -> pushCmd shell
     Status  -> putStrLn "STATUS!"
     Setup   -> putStrLn "SETUP!"
     Implode -> putStrLn "IMPLODE!"
@@ -30,18 +36,17 @@ execute processor cmd =
 
 -- | run the push command
 -- > nbx push
-pushCmd :: P.Processor -> IO ()
-pushCmd processor = do
-  let task = P.run processor
+pushCmd :: Shell -> IO ()
+pushCmd shell = do
 
   Print.header "Setting up concert"
 
-  task "Preparing show"   "./test-scripts/good.sh"
-  task "Setting up stage" "./test-scripts/good.sh"
-  task "Inviting guests"  "./test-scripts/good.sh"
+  shell "Preparing show"   "./test-scripts/good.sh"
+  shell "Setting up stage" "./test-scripts/good.sh"
+  shell "Inviting guests"  "./test-scripts/good.sh"
 
   Print.header "Let the show begin"
 
-  task "Opening gates"    "./test-"
-  task "Starting show"    "./test-scripts/bad.sh"
-
+  shell "Opening gates" "./test-scripts/good.sh"
+  shell "Starting show" "./test-scripts/good-then-bad.sh"
+  shell "Shouldn't run" "./test-scripts/good.sh"

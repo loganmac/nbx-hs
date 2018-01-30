@@ -26,7 +26,7 @@ pe "the band is an acapella group"
 pe "they are all crying"
 pe "lead singer is too afraid to go out"
 pe "accidentally turned on sprinklers"
-pe "i smell smoke"
+pe "i smell smoke, how is that even possible?"
 pe "fire department just showed up"
 
 printf "\n"

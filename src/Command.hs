@@ -6,7 +6,11 @@ module Command where
 import           Data.Text (Text)
 import           Turtle    (Parser, options, subcommand, (<|>))
 
--- Top level command types
+
+--------------------------------------------------------------------------------
+-- COMMANDS
+
+-- | Commands that are recognized and parsed by the CLI
 data Command
   = Main
   | Init
@@ -16,12 +20,15 @@ data Command
   | Implode
   | Version
 
--- parse arguments, return a command
+--------------------------------------------------------------------------------
+-- PARSING
+
+-- | parse arguments, return a command
 parse :: IO Command
 parse =
   options "NBX: the Nanobox CLI" parser
 
--- parsers that turn arguments into commands
+-- | parsers that turn arguments into commands
 parser :: Parser Command
 parser =
   mainCmd
@@ -32,12 +39,12 @@ parser =
   <|> implodeCmd
   <|> versionCmd
 
--- parse a raw `nbx`
+-- | parse a raw `nbx`
 mainCmd :: Parser Command
 mainCmd =
   pure Main
 
--- parse `nbx init`
+-- | parse `nbx init`
 initCmd :: Parser Command
 initCmd =
   subcommand
@@ -45,7 +52,7 @@ initCmd =
     "Initialize a .nbx.yml file for a project"
     $ pure Init
 
--- parse `nbx status`
+-- | parse `nbx status`
 statusCmd :: Parser Command
 statusCmd =
   subcommand
@@ -53,7 +60,7 @@ statusCmd =
     "Display the status of the NBX platform."
     $ pure Status
 
--- parse `nbx push`
+-- | parse `nbx push`
 pushCmd :: Parser Command
 pushCmd =
   subcommand
@@ -61,7 +68,7 @@ pushCmd =
     "Publish with nanobox."
     $ pure Push
 
--- parse `nbx setup`
+-- | parse `nbx setup`
 setupCmd :: Parser Command
 setupCmd =
   subcommand
@@ -69,7 +76,7 @@ setupCmd =
     "Install/configure NBX platform."
     $ pure Setup
 
--- parse `nbx implode`
+-- | parse `nbx implode`
 implodeCmd :: Parser Command
 implodeCmd =
   subcommand
@@ -77,7 +84,7 @@ implodeCmd =
     "Delete NBX and all configuration"
     $ pure Implode
 
--- parse `nbx version`
+-- | parse `nbx version`
 versionCmd :: Parser Command
 versionCmd =
   subcommand

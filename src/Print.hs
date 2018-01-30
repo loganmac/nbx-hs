@@ -1,3 +1,5 @@
+{-| A print driver and some formatting functions.
+-}
 module Print where
 
 import           Concurrency         (millisecond, sleep)

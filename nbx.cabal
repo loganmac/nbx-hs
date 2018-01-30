@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c4838f866ad3ed3b0e3de0fafa6e9c8f4713db07f047d5096eb9c174a782af57
+-- hash: 1a2103689bdcd73e6b8675f0f4bdee922faf52084b4b98fb8791c1e32a3d18ef
 
 name:           nbx
 version:        0.1.0.0
@@ -31,9 +31,9 @@ executable nbx
       Command
       Concurrency
       Print
-      Processor
-      Processor.Internal
-      Processor.Types
+      Shell
+      Shell.Internal
+      Shell.Types
       Paths_nbx
   hs-source-dirs:
       src
