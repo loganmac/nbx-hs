@@ -50,6 +50,8 @@ toSpinner = do
 --------------------------------------------------------------------------------
 -- HEADER
 
+type Header = String -> IO ()
+
 -- | Prints a header that describes a group of tasks
 header :: String -> IO ()
 header s = do

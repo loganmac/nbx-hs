@@ -1,27 +1,27 @@
 # nbx
 
 ## Hurdles
-  Log
-  DB (key/val)
-  Global Config
-  Boxfile parsing
+- Log
+- DB (key/val)
+- Global Config
+- Boxfile parsing
 
 ## Examples
 
 ### Workflow
-nbx init
-nbx run
-nbx push [remote]
+- nbx init
+- nbx run
+- nbx push [remote]
 
 ### Troubleshooting
-nbx logs [remote]
-nbx console [remote]
-nbx tunnel [remote]
-nbx status [remote]
+- nbx logs [remote]
+- nbx console [remote]
+- nbx tunnel [remote]
+- nbx status [remote]
 
 ### Helpers
-nbx setup
-nbx implode
+- nbx setup
+- nbx implode
 
 
 ## Example nbx.yml file
