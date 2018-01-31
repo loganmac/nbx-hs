@@ -19,5 +19,3 @@ p "sending musicians onstage"
 p "fading in lights"
 p "flipping switch"
 p "turning up to 11"
-
-printf "\n"

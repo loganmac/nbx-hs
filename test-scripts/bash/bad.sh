@@ -22,6 +22,4 @@ p "accidentally turned on sprinklers"
 p "i smell smoke, how is that even possible?"
 p "fire department just showed up"
 
-printf "\n"
-
 exit 113

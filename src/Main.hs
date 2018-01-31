@@ -58,3 +58,27 @@ displayDriver = Shell.DisplayDriver
   , Shell.printFailure = Print.failure
   , Shell.toSpinner    = Print.toSpinner
   }
+
+verboseDriver = Shell.DisplayDriver
+  { Shell.formatOut    = out
+  , Shell.formatErr    = err
+  , Shell.spinner      = spinner
+  , Shell.printOutput  = output
+  , Shell.printSuccess = success
+  , Shell.printFailure = failure
+  , Shell.toSpinner    = toSpinner
+  }
+  where
+    out x = x
+
+    err x = x
+
+    spinner pos prompt = pure ()
+
+    output = putStrLn
+
+    success str = pure ()
+
+    failure str buf = pure ()
+
+    toSpinner = pure ()

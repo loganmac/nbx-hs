@@ -6,4 +6,3 @@ do
   printf "installing package #%s...\n" $i
   sleep 0.001
 done
-printf "\n"

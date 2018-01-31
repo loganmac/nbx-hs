@@ -34,6 +34,7 @@ spaces n = replicate n ' '
 -- | Prints a spinner next to the given prompt
 spinner :: Int -> String -> IO ()
 spinner pos prompt = do
+  Term.clearLine
   putStr taskIndent
   putStrLn $
     yellowBold $
@@ -62,16 +63,19 @@ header s = do
 
 -- | Prints the message as a success (green with a check)
 success :: String -> IO ()
-success str =
+success str = do
   printResult $ greenBold $ taskIndent ++ "✓ " ++ str
+  Term.clearLine
 
 -- | Prints the message as a failure (red with an x)
 failure :: String -> [String] -> IO ()
 failure str buffer = do
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
-  putStrLn $ "\n\n" ++ headerIndent ++
+  Term.clearLine
+  putStrLn $ "\n" ++ headerIndent ++
     bold (redReverse $ "Error executing task '" ++ str ++ "':\n")
   forM_ (reverse buffer) printBufferLine
+  putStrLn ""
   where
     printBufferLine x = putStrLn $ taskIndent ++ x
 
