@@ -54,7 +54,7 @@ toSpinner = do
 header :: String -> IO ()
 header s = do
   putStrLn ""
-  putStrLn $ headerIndent ++ blueBold (s ++ " :")
+  putStrLn $ headerIndent ++ cyanBold (s ++ " :")
   putStrLn ""
 
 
@@ -63,15 +63,13 @@ header s = do
 
 -- | Prints the message as a success (green with a check)
 success :: String -> IO ()
-success str = do
+success str =
   printResult $ greenBold $ taskIndent ++ "✓ " ++ str
-  Term.clearLine
 
 -- | Prints the message as a failure (red with an x)
 failure :: String -> [String] -> IO ()
 failure str buffer = do
   printResult $ redBold $ taskIndent ++ "✖ " ++ str
-  Term.clearLine
   putStrLn $ "\n" ++ headerIndent ++
     bold (redReverse $ "Error executing task '" ++ str ++ "':\n")
   forM_ (reverse buffer) printBufferLine
@@ -85,6 +83,7 @@ printResult str = do
   toSpinner
   Term.clearLine
   putStrLn str
+  Term.clearLine
 
 --------------------------------------------------------------------------------
 -- STDOUT/STDERR
@@ -99,11 +98,11 @@ output str = do
 
 -- | formats a normal output
 out :: String -> String
-out = lightGreen . strip
+out = faint . strip
 
 -- | formats an error
 err :: String -> String
-err = lightRed . strip
+err = normalRed . strip
 
 -- | removes terminal control sequences from the string
 strip :: String -> String
@@ -134,17 +133,13 @@ greenBold = style Green Default Bold
 redBold :: String -> String
 redBold = style Red Default Bold
 
--- | Helper for light green text
-lightGreen :: String -> String
-lightGreen = style Default Default Faint
+-- | Helper for normal red text
+normalRed :: String -> String
+normalRed = style Red Default ColoredNormal
 
--- | Helper for light red text
-lightRed :: String -> String
-lightRed = style Red Default ColoredNormal
-
--- | Helper to make a text blue & bold
-blueBold :: String -> String
-blueBold = style Cyan Default Bold
+-- | Helper to make a text cyan & bold
+cyanBold :: String -> String
+cyanBold = style Cyan Default Bold
 
 -- | Help to make a text background red and foreground the background color
 redReverse :: String -> String
@@ -157,6 +152,10 @@ yellowUnderline = style Yellow Default Underline
 -- | Help to make a text background yellow and bold
 yellowBold :: String -> String
 yellowBold = style Yellow Default Bold
+
+-- | Helper for faint text
+faint :: String -> String
+faint = style Default Default Faint
 
 -- | Helper to underline
 underline :: String -> String

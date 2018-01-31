@@ -60,25 +60,11 @@ displayDriver = Shell.DisplayDriver
   }
 
 verboseDriver = Shell.DisplayDriver
-  { Shell.formatOut    = out
-  , Shell.formatErr    = err
-  , Shell.spinner      = spinner
-  , Shell.printOutput  = output
-  , Shell.printSuccess = success
-  , Shell.printFailure = failure
-  , Shell.toSpinner    = toSpinner
+  { Shell.formatOut    = id
+  , Shell.formatErr    = id
+  , Shell.toSpinner    = pure ()
+  , Shell.printOutput  = putStrLn
+  , Shell.printSuccess = \str        -> pure ()
+  , Shell.printFailure = \str buf    -> pure ()
+  , Shell.spinner      = \pos prompt -> pure ()
   }
-  where
-    out x = x
-
-    err x = x
-
-    spinner pos prompt = pure ()
-
-    output = putStrLn
-
-    success str = pure ()
-
-    failure str buf = pure ()
-
-    toSpinner = pure ()
