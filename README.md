@@ -59,8 +59,9 @@ web:
       nginx: nginx -c /etc/nginx.conf
       python: nanoinit python app.py
     http:
-      to: 8080
+      expose: 8080
       force_ssl: true
+      health_route: /health
       routes:
         - 'admin:'
         - '^/admin/'
