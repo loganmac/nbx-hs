@@ -1,9 +1,6 @@
 # nbx
 
 ## Hurdles
-- Log
-- DB (key/val)
-- Global Config
 - Boxfile parsing
 
 ## Examples
@@ -25,7 +22,7 @@
 
 
 ## Example nbx.yml file
-```
+```yaml
 # CONFIGURE NBX
 config:
   remotes:
