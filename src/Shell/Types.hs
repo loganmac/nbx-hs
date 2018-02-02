@@ -2,16 +2,18 @@ module Shell.Types where
 
 import           Shell.Concurrency (Chan)
 
--- | DisplayDriver is a collection of functions that
+-- | Driver is a collection of functions that
 -- describe what to do on process output
-data DisplayDriver = DisplayDriver
-  { formatOut    :: String -> String
-  , formatErr    :: String -> String
-  , spinner      :: Int -> String -> IO ()
-  , printOutput  :: String -> IO ()
-  , printSuccess :: String -> IO ()
-  , printFailure :: String -> [String] -> IO ()
-  , toSpinner    :: IO ()
+data Driver = Driver
+  { formatOut     :: String -> String
+  , formatErr     :: String -> String
+  , formatSuccess :: String -> String
+  , formatFailure :: String -> String
+  , spinner       :: Int -> String -> IO ()
+  , handleOutput  :: String -> IO ()
+  , handleSuccess :: String -> IO ()
+  , handleFailure :: String -> String -> [String] -> IO ()
+  , toSpinner     :: IO ()
   }
 
 -- | The output of running an external process
@@ -22,7 +24,7 @@ data Output = Msg String | Err String | Success | Failure Int
 data Processor = Processor (Chan String) (Chan Output)
 
 -- | The type for a partially applied `Processor.run`
-type Shell = (String -> String -> IO ())
+type Shell = (Task -> Cmd -> IO ())
 
 -- | Task is the description of an external process
 type Task = String

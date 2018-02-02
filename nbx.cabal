@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9e46d1a975cef51021df577861d88e06f2d5844959a25bcb1d66abfd84d00880
+-- hash: 87ba2857750c44cd9aeeb66ee3853604d9150d01c674313900667b6094c1788a
 
 name:           nbx
 version:        0.1.0.0
@@ -43,6 +43,7 @@ executable nbx
     , async
     , base >=4.7 && <5
     , bytestring
+    , regex-compat
     , stm
     , text
     , time

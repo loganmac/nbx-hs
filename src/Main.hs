@@ -19,6 +19,10 @@ main = do
   --       putStrLn ""
   -- shell <- Shell.new verboseDriver
 
+  -- TODO: turn this into a truecolor display driver?
+  -- let header = Print.tcHeader
+  -- shell <- Shell.new trueColorDriver
+
   cmd   <- parse                        -- parse the command from the CLI
   execute shell header cmd              -- execute it, passing the shell and command
 
@@ -58,23 +62,38 @@ pushCmd shell header = do
 -- SHELL DISPLAY DRIVER
 
 -- | a display driver that pretty-prints output from processes with a spinner
-displayDriver = Shell.DisplayDriver
-  { Shell.formatOut    = Print.out
-  , Shell.formatErr    = Print.err
-  , Shell.spinner      = Print.spinner
-  , Shell.printOutput  = Print.output
-  , Shell.printSuccess = Print.success
-  , Shell.printFailure = Print.failure
-  , Shell.toSpinner    = Print.toSpinner
+displayDriver = Shell.Driver
+  { Shell.formatOut     = Print.formatOut
+  , Shell.formatErr     = Print.formatErr
+  , Shell.formatSuccess = Print.formatSuccess
+  , Shell.formatFailure = Print.formatFailure
+  , Shell.spinner       = Print.spinner
+  , Shell.handleOutput  = Print.output
+  , Shell.handleSuccess = Print.success
+  , Shell.handleFailure = Print.failure
+  , Shell.toSpinner     = Print.toSpinner
   }
 
 -- | a display driver that just logs everything out
-verboseDriver = Shell.DisplayDriver
-  { Shell.formatOut    = id
-  , Shell.formatErr    = id
-  , Shell.toSpinner    = pure ()
-  , Shell.printOutput  = putStrLn
-  , Shell.printSuccess = \str        -> pure ()
-  , Shell.printFailure = \str buf    -> pure ()
-  , Shell.spinner      = \pos prompt -> pure ()
+verboseDriver = Shell.Driver
+  { Shell.formatOut     = id
+  , Shell.formatErr     = id
+  , Shell.formatSuccess = id
+  , Shell.formatFailure = id
+  , Shell.toSpinner     = pure ()
+  , Shell.handleOutput  = putStrLn
+  , Shell.handleSuccess = \str           -> pure ()
+  , Shell.handleFailure = \task fail buf -> pure ()
+  , Shell.spinner       = \pos prompt    -> pure ()
   }
+
+-- | a display driver that just logs everything out
+-- trueColorDriver = Shell.Driver
+--   { Shell.formatOut    = Print.tcOut
+--   , Shell.formatErr    = Print.tcErr
+--   , Shell.spinner      = Print.tcSpinner
+--   , Shell.handleOutput  = Print.output
+--   , Shell.handleSuccess = Print.tcSuccess
+--   , Shell.handleFailure = Print.tcFailure
+--   , Shell.toSpinner    = Print.toSpinner
+--   }

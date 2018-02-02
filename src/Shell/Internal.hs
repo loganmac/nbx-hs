@@ -1,6 +1,6 @@
 {-| Internals of the `Shell` package, which describe
     a thread that can run external processes,
-    and call functions of the `DisplayDriver`
+    and call functions of the `Driver`
     on process output.
 -}
 module Shell.Internal where
@@ -11,9 +11,9 @@ import           GHC.IO.Handle         (Handle)
 import           Shell.Concurrency     (Chan, Lock, done, maybeReceive,
                                         millisecond, newChan, newLock, receive,
                                         send, sleep, spawn, wait)
-import           Shell.Types           (Cmd, DisplayDriver (..), Output (..),
+import           Shell.Types           (Cmd, Driver (..), Output (..),
                                         Processor (..), Task)
-import qualified Shell.Types           as DisplayDriver
+import qualified Shell.Types           as Driver
 import           System.Exit           (ExitCode (..), exitWith)
 import           System.IO             (hGetLine, hIsEOF)
 import           System.Process.Typed  (Process, closed, createPipe, getStderr,
@@ -49,21 +49,23 @@ processor (Processor input output) =
 -- RUN COMMAND
 
 -- | executes the given command in the processor
-run :: Processor -> DisplayDriver -> Task -> Cmd -> IO ()
-run (Processor input output) printer task cmd = do
+run :: Processor -> Driver -> Task -> Cmd -> IO ()
+run (Processor input output) driver task cmd = do
   send input cmd  -- send the command to the Processor thread
 
   loop 0 0 []     -- start the output loop with spinner zeroed out
 
   where
-    -- setup the DisplayDriver functions from the printer
-    spinner        = DisplayDriver.spinner       printer
-    formatOut      = DisplayDriver.formatOut     printer
-    formatErr      = DisplayDriver.formatErr     printer
-    printOutput    = DisplayDriver.printOutput   printer
-    printSuccess   = DisplayDriver.printSuccess  printer
-    printFailure   = DisplayDriver.printFailure  printer
-    toSpinner      = DisplayDriver.toSpinner     printer
+    -- setup the Driver functions from the driver
+    spinner        = Driver.spinner       driver
+    formatOut      = Driver.formatOut     driver
+    formatErr      = Driver.formatErr     driver
+    formatSuccess  = Driver.formatSuccess driver
+    formatFailure  = Driver.formatFailure driver
+    handleOutput   = Driver.handleOutput  driver
+    handleSuccess  = Driver.handleSuccess driver
+    handleFailure  = Driver.handleFailure driver
+    toSpinner      = Driver.toSpinner     driver
 
     loop :: Int -> POSIXTime -> [String] -> IO ()
     loop lastSpinPos lastSpinTime buffer = do
@@ -80,30 +82,25 @@ run (Processor input output) printer task cmd = do
         (handleMsg spinPos spinTime) out     -- handle if there's ouput
 
       where
+        handleAndLoop :: Int-> POSIXTime -> String -> IO ()
+        handleAndLoop spinPos spinTime str = do
+          handleOutput str
+          loop spinPos spinTime (str : buffer)
 
         handleMsg :: Int -> POSIXTime -> Output -> IO ()
         handleMsg spinPos spinTime msg = case msg of
-          Msg m -> do
-            let out       = formatOut m
-            let newBuffer = out : buffer
-            printOutput out
-            loop spinPos spinTime newBuffer
-          Err m -> do
-            let err       = formatErr m
-            let newBuffer = err : buffer
-            printOutput err
-            loop spinPos spinTime newBuffer
-          Success ->
-            printSuccess task
+          Msg m   -> handleAndLoop spinPos spinTime $ formatOut m
+          Err m   -> handleAndLoop spinPos spinTime $ formatErr m
+          Success -> handleSuccess $ formatSuccess task
           Failure c -> do
-            printFailure task buffer
+            handleFailure task (formatFailure task) buffer
             exitWith $ ExitFailure c
 
         handleNoMsg :: Int -> POSIXTime -> IO ()
         handleNoMsg spinPos spinTime = do
-            sleep 50 millisecond
-            toSpinner
-            loop spinPos spinTime buffer
+          sleep 50 millisecond
+          toSpinner
+          loop spinPos spinTime buffer
 
 --------------------------------------------------------------------------------
 -- | RESPOND TO RUN COMMAND FROM PROCESSOR THREAD
