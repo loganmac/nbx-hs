@@ -84,7 +84,7 @@ formatFailure str = style Bold. color Red $ "✖ " ++ str
 strip :: String -> String
 strip str = Regex.subRegex ansiEscape str ""
   where
-    ansiEscape = Regex.mkRegex "\\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]"
+    ansiEscape = Regex.mkRegex "\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]|\r|\n"
 
 --------------------------------------------------------------------------------
 -- PRINTING
