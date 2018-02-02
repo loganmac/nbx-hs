@@ -19,10 +19,6 @@ main = do
   --       putStrLn ""
   -- shell <- Shell.new verboseDriver
 
-  -- TODO: turn this into a truecolor display driver?
-  -- let header = Print.tcHeader
-  -- shell <- Shell.new trueColorDriver
-
   cmd   <- parse                        -- parse the command from the CLI
   execute shell header cmd              -- execute it, passing the shell and command
 
@@ -86,14 +82,3 @@ verboseDriver = Shell.Driver
   , Shell.handleFailure = \task fail buf -> pure ()
   , Shell.spinner       = \pos prompt    -> pure ()
   }
-
--- | a display driver that just logs everything out
--- trueColorDriver = Shell.Driver
---   { Shell.formatOut    = Print.tcOut
---   , Shell.formatErr    = Print.tcErr
---   , Shell.spinner      = Print.tcSpinner
---   , Shell.handleOutput  = Print.output
---   , Shell.handleSuccess = Print.tcSuccess
---   , Shell.handleFailure = Print.tcFailure
---   , Shell.toSpinner    = Print.toSpinner
---   }
