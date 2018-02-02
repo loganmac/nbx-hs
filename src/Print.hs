@@ -86,7 +86,7 @@ strip str = Regex.subRegex ansiEscape str ""
   where
     ansiEscape = Regex.mkRegex "\\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]"
 
-      --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- PRINTING
 
 -- | Clears the last line, prints a new last line, then clears the spinner
