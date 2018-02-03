@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-| Shell is a thread that can run external processes,
     display a spinner while processing (provided by `Driver`),
     and call functions of the `Driver` on process output.
@@ -75,7 +76,7 @@ new driver = do
 -- EXECUTE / OUTPUT LOOP
 
 -- | executes the given command in the processor
-execute :: Processor -> Driver a -> TaskName -> Cmd -> IO ()
+execute :: forall a. Processor -> Driver a -> TaskName -> Cmd -> IO ()
 execute (Processor input output) driver task cmd = do
   send input cmd                               -- send the command to the Processor thread
   loop (initialState driver task)              -- start the output loop
@@ -83,7 +84,7 @@ execute (Processor input output) driver task cmd = do
     -- | try to read from the channel, returning Nothing if no value available
     maybeReceive = atomically . tryReadTQueue
 
-    -- loop :: a -> IO
+    loop :: a -> IO ()
     loop acc = do
       out <- maybeReceive output
       case out of
