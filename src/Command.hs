@@ -1,11 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-| Commands recognized by the CLI, and how to parse them
 -}
 module Command where
 
-import           Turtle    (Parser, options, subcommand, (<|>))
-import           Universum
-
+import           Turtle (Parser, options, subcommand, (<|>))
 
 --------------------------------------------------------------------------------
 -- COMMANDS
