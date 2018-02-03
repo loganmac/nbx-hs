@@ -4,9 +4,10 @@ module Print where
 
 import           Universum
 
-import qualified Data.Text           as T
-import qualified System.Console.ANSI as Term
-import qualified Text.Regex          as Regex
+import qualified Data.Text             as T
+import qualified System.Console.ANSI   as Term
+import           System.Console.Pretty (Color (..), Style (..), color, style)
+import qualified Text.Regex            as Regex
 
 --------------------------------------------------------------------------------
 -- CONSTANTS
@@ -43,7 +44,7 @@ type Header = Text -> IO ()
 header :: Text -> IO ()
 header s = do
   clearPrint ""
-  clearPrint $ headerIndent <> (style Bold . color Cyan $ (s <> " :"))
+  clearPrint $ headerIndent <> style Bold (color Cyan $ s <> " :")
   clearPrint ""
 
 --------------------------------------------------------------------------------
@@ -98,11 +99,11 @@ formatErr = style Normal . color Red . strip
 
 -- | formats a success string
 formatSuccess :: Text -> Text
-formatSuccess x = style Bold . color Green $ "✓ " <> x
+formatSuccess x = style Bold $ color Green $ "✓ " <> x
 
 -- | formats a failure string
 formatFailure :: Text -> Text
-formatFailure x = style Bold . color Red $ "✖ " <> x
+formatFailure x = style Bold $ color Red $ "✖ " <> x
 
 -- | removes terminal control sequences from the string
 strip :: Text -> Text
@@ -129,12 +130,15 @@ failure :: Text -> Text -> [Text] -> IO ()
 failure task msg buffer = do
   printResult msg
   clearPrint "" -- explicitly to clear the line
-  clearPrint $ headerIndent <>
-    (style Bold . style Reverse . color Red $ "Error executing task '" <> task <> "':")
+  clearPrint $ headerIndent <> styledErrorHeader
   clearPrint "" -- explicitly to clear the line
 
   forM_ (reverse buffer) $ \x -> clearPrint $ taskIndent <> x
   clearPrint ""
+  where
+    styledErrorHeader =
+      style Bold $ style Reverse $ color Red
+      $ "Error executing task '" <> task <> "':"
 
 -- | clears the spinner then prints the string in its place
 printResult :: Text -> IO ()
@@ -143,48 +147,4 @@ printResult x = do
   clearPrint $ taskIndent <> x
   Term.clearLine
 
---------------------------------------------------------------------------------
--- COLORS/STYLES
 
-data Section = Foreground | Background
-
--- | Colors for an ANSI terminal
-data Color = Black | Red | Green | Yellow | Blue | Magenta | Cyan | White | Default
-  deriving (Enum)
-
--- | SGR paramaters, aka text styles for an ANSI terminal
-data Style
-  = Normal | Bold | Faint | Italic
-  | Underline | SlowBlink | ColoredNormal | Reverse
-  deriving (Enum)
-
--- | Helper to set foreground color
-color :: Color -> Text -> Text
-color = colorize Foreground
-
--- | Helper to set background color
-bgColor :: Color -> Text -> Text
-bgColor = colorize Background
-
-colorize :: Section -> Color -> Text -> Text
-colorize section col str =
-  "\x1b[" <>          -- escape code
-  sectionNum <>       -- bg/foreground
-  show (fromEnum col) -- color code
-  <> "m" <>           -- delim
-  str <>              -- inner string
-  "\x1b[0m"           -- reset
-  where
-    sectionNum :: Text
-    sectionNum = case section of
-      Foreground -> "9"
-      Background -> "4"
-
--- | Wrap the text in the escape codes to format according to the color and style
-style :: Style -> Text -> Text
-style sty str =
-    "\x1b[" <>             -- escape code
-    show (fromEnum sty) -- style
-    <> "m" <>              -- delim
-    str <>                 -- string
-    "\x1b[0m"              -- reset

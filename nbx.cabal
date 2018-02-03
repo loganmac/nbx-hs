@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f20b760b3e163fee963b483781900bb0bd2e8146e022766e10b938dcbb9a2196
+-- hash: abffcd28e1737d3833f7f1c05efd2f6120064fd919b28d09fce0ee6c3516fefe
 
 name:           nbx
 version:        0.1.0.0
@@ -36,6 +36,7 @@ executable nbx
     , async
     , base >=4.7 && <5
     , bytestring
+    , pretty-terminal
     , regex-compat
     , stm
     , text
@@ -47,7 +48,5 @@ executable nbx
       Command
       Print
       Shell
-      Shell.Internal
-      Shell.Types
       Paths_nbx
   default-language: Haskell2010

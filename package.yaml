@@ -28,6 +28,7 @@ dependencies:
 - async
 - base >= 4.7 && < 5
 - bytestring
+- pretty-terminal
 - regex-compat
 - stm
 - text
