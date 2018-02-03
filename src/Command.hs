@@ -1,8 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-| Commands recognized by the CLI, and how to parse them
 -}
 module Command where
 
+import           Universum
 import           Data.Text (Text)
 import           Turtle    (Parser, options, subcommand, (<|>))
 

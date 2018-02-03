@@ -5,6 +5,7 @@ module Shell
 (new, Shell, Driver(..))
 where
 
+import           Universum
 import           Shell.Internal (mkProcessor, processor, run)
 import           Shell.Types    (Cmd, Driver (..), Output (..), Processor (..),
                                  Shell, Task)

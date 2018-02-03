@@ -1,33 +1,34 @@
 module Shell.Types where
 
+import           Universum
 import           Shell.Concurrency (Chan)
 
 -- | Driver is a collection of functions that
 -- describe what to do on process output
 data Driver = Driver
-  { formatOut     :: String -> String
-  , formatErr     :: String -> String
-  , formatSuccess :: String -> String
-  , formatFailure :: String -> String
-  , spinner       :: Int -> String -> IO ()
-  , handleOutput  :: String -> IO ()
-  , handleSuccess :: String -> IO ()
-  , handleFailure :: String -> String -> [String] -> IO ()
+  { formatOut     :: Text -> Text
+  , formatErr     :: Text -> Text
+  , formatSuccess :: Text -> Text
+  , formatFailure :: Text -> Text
+  , spinner       :: Int -> Text -> IO ()
+  , handleOutput  :: Text -> IO ()
+  , handleSuccess :: Text -> IO ()
+  , handleFailure :: Text -> Text -> [Text] -> IO ()
   , toSpinner     :: IO ()
   }
 
 -- | The output of running an external process
-data Output = Msg String | Err String | Success | Failure Int
+data Output = Msg Text | Err Text | Success | Failure Int
 
 -- | Processor has an input channel (for sending commands)
 -- and an output channel (for reading the output)
-data Processor = Processor (Chan String) (Chan Output)
+data Processor = Processor (Chan Text) (Chan Output)
 
 -- | The type for a partially applied `Processor.run`
 type Shell = (Task -> Cmd -> IO ())
 
 -- | Task is the description of an external process
-type Task = String
+type Task = Text
 
 -- | Cmd is the external command like `cat foo` to run
-type Cmd = String
+type Cmd = Text

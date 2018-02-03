@@ -1,5 +1,6 @@
 module Main where
 
+import           Universum
 import           Command (Command (..), parse)
 import qualified Print
 import           Shell   (Shell)
@@ -14,9 +15,9 @@ main = do
 
   -- TODO: turn this into verbose mode
   -- let header x = do
-  --       putStrLn ""
-  --       putStrLn x
-  --       putStrLn ""
+  --       putTextLn ""
+  --       putTextLn x
+  --       putTextLn ""
   -- shell <- Shell.new verboseDriver
 
   cmd   <- parse                        -- parse the command from the CLI
@@ -29,13 +30,13 @@ main = do
 execute :: Shell -> Print.Header -> Command -> IO ()
 execute shell header cmd =
   case cmd of
-    Main    -> putStrLn "For help, run 'nbx -h'."
-    Init    -> putStrLn "INIT!"
+    Main    -> putTextLn "For help, run 'nbx -h'."
+    Init    -> putTextLn "INIT!"
     Push    -> pushCmd  shell header
-    Status  -> putStrLn "STATUS!"
-    Setup   -> putStrLn "SETUP!"
-    Implode -> putStrLn "IMPLODE!"
-    Version -> putStrLn "NBX version 0.0.1"
+    Status  -> putTextLn "STATUS!"
+    Setup   -> putTextLn "SETUP!"
+    Implode -> putTextLn "IMPLODE!"
+    Version -> putTextLn "NBX version 0.0.1"
 
 -- | run the push command
 -- > nbx push
@@ -58,6 +59,7 @@ pushCmd shell header = do
 -- SHELL DISPLAY DRIVER
 
 -- | a display driver that pretty-prints output from processes with a spinner
+displayDriver :: Shell.Driver
 displayDriver = Shell.Driver
   { Shell.formatOut     = Print.formatOut
   , Shell.formatErr     = Print.formatErr
@@ -74,14 +76,15 @@ displayDriver = Shell.Driver
 windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
 
 -- | a display driver that just logs everything out
+verboseDriver :: Shell.Driver
 verboseDriver = Shell.Driver
-  { Shell.formatOut     = id
-  , Shell.formatErr     = id
-  , Shell.formatSuccess = id
-  , Shell.formatFailure = id
+  { Shell.formatOut     = identity
+  , Shell.formatErr     = identity
+  , Shell.formatSuccess = identity
+  , Shell.formatFailure = identity
   , Shell.toSpinner     = pure ()
-  , Shell.handleOutput  = putStrLn
-  , Shell.handleSuccess = \str           -> pure ()
-  , Shell.handleFailure = \task fail buf -> pure ()
-  , Shell.spinner       = \pos prompt    -> pure ()
+  , Shell.handleOutput  = putTextLn
+  , Shell.handleSuccess = \_str             -> pure ()
+  , Shell.handleFailure = \_task _fail _buf -> pure ()
+  , Shell.spinner       = \_pos _prompt     -> pure ()
   }

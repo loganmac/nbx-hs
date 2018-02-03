@@ -2,40 +2,42 @@
 -}
 module Print where
 
-import           Control.Monad       (forM_)
+import           Universum
+import           Prelude             ((!!))
+
 import qualified System.Console.ANSI as Term
 import qualified Text.Regex          as Regex
 
 --------------------------------------------------------------------------------
 -- CONSTANTS
 
--- | indentaion to use before a header
-headerIndent :: String
+-- | indentation to use before a header
+headerIndent :: Text
 headerIndent = spaces 2
 
 -- | indentation to use before a task
-taskIndent :: String
+taskIndent :: Text
 taskIndent = spaces 4
 
 -- | indentation to use before the output of a task
-taskOutputIndent :: String
+taskOutputIndent :: Text
 taskOutputIndent = spaces 6
 
 -- | a string with the given number of spaces
-spaces :: Int -> String
-spaces n = replicate n ' '
+spaces :: Int -> Text
+spaces n = toText $ replicate n ' '
 
 --------------------------------------------------------------------------------
 -- HEADER
 
-type Header = String -> IO ()
+type Header = Text -> IO ()
 
 -- | Prints a header that describes a group of tasks
-header :: String -> IO ()
+header :: Text -> IO ()
 header s = do
-  putStrLn ""
-  putStrLn $ headerIndent ++ (style Bold . color Cyan $ (s ++ " :"))
-  putStrLn ""
+  putTextLn ""
+  putTextLn $ headerIndent <> (style Bold . color Cyan $ (s <> " :"))
+  putTextLn ""
 
 --------------------------------------------------------------------------------
 -- SPINNER
@@ -51,15 +53,15 @@ windowsSpinner :: SpinnerTheme
 windowsSpinner = SpinnerTheme "||||//----\\\\"
 
 -- | Prints a spinner next to the given prompt
-spinner :: SpinnerTheme -> Int -> String -> IO ()
+spinner :: SpinnerTheme -> Int -> Text -> IO ()
 spinner (SpinnerTheme theme) pos prompt = do
   Term.clearLine
-  putStr taskIndent
-  putStrLn $
+  putText taskIndent
+  putTextLn $
     style Bold . color Yellow $
-      theme !! mod pos (length theme) :
-        ' ' : (style Underline. color Yellow $ prompt)
-  putStrLn ""
+      (toText [theme !! mod pos (length theme)]) <>
+        " " <> (style Underline . color Yellow $ prompt)
+  putTextLn ""
 
 -- | Move to the spinner
 toSpinner :: IO ()
@@ -71,24 +73,24 @@ toSpinner = do
 -- FORMAT OUTPUT
 
 -- | formats a normal output
-formatOut :: String -> String
+formatOut :: Text -> Text
 formatOut = style Faint . strip
 
 -- | formats an error
-formatErr :: String -> String
+formatErr :: Text -> Text
 formatErr = style Normal . color Red . strip
 
 -- | formats a success string
-formatSuccess :: String -> String
-formatSuccess str = style Bold . color Green $ "✓ " ++ str
+formatSuccess :: Text -> Text
+formatSuccess str = style Bold . color Green $ "✓ " <> str
 
 -- | formats a failure string
-formatFailure :: String -> String
-formatFailure str = style Bold . color Red $ "✖ " ++ str
+formatFailure :: Text -> Text
+formatFailure str = style Bold . color Red $ "✖ " <> str
 
 -- | removes terminal control sequences from the string
-strip :: String -> String
-strip str = Regex.subRegex ansiEscape str ""
+strip :: Text -> Text
+strip str = toText $ Regex.subRegex ansiEscape (toString str) ""
   where
     ansiEscape = Regex.mkRegex "\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]|\r|\n"
 
@@ -96,35 +98,35 @@ strip str = Regex.subRegex ansiEscape str ""
 -- PRINTING
 
 -- | Clears the last line, prints a new last line, then clears the spinner
-output :: String -> IO ()
+output :: Text -> IO ()
 output str = do
   Term.cursorUpLine 1
   Term.clearLine
-  putStrLn (taskOutputIndent ++ str)
+  putTextLn (taskOutputIndent <> str)
   toSpinner
 
 -- | Prints the success message
-success :: String -> IO ()
+success :: Text -> IO ()
 success = printResult
 
 -- | Prints the message as a failure (red with an x)
-failure :: String -> String -> [String] -> IO ()
+failure :: Text -> Text -> [Text] -> IO ()
 failure task failure buffer = do
   printResult failure
-  putStrLn ""
-  putStrLn $ headerIndent ++
-    (style Bold . style Reverse . color Red $ "Error executing task '" ++ task ++ "':")
-  putStrLn ""
+  putTextLn ""
+  putTextLn $ headerIndent <>
+    (style Bold . style Reverse . color Red $ "Error executing task '" <> task <> "':")
+  putTextLn ""
 
-  forM_ (reverse buffer) (\x -> putStrLn $ taskIndent ++ x)
-  putStrLn ""
+  forM_ (reverse buffer) (\x -> putTextLn $ taskIndent <> x)
+  putTextLn ""
 
 -- | clears the spinner then prints the string in its place
-printResult :: String -> IO ()
+printResult :: Text -> IO ()
 printResult str = do
   toSpinner
   Term.clearLine
-  putStrLn $ taskIndent ++ str
+  putTextLn $ taskIndent <> str
   Term.clearLine
 
 --------------------------------------------------------------------------------
@@ -143,19 +145,19 @@ data Style
   deriving (Enum)
 
 -- | Helper to set foreground color
-color :: Color -> String -> String
+color :: Color -> Text -> Text
 color = colorize Foreground
 
 -- | Helper to set background color
-bgColor :: Color -> String -> String
+bgColor :: Color -> Text -> Text
 bgColor = colorize Background
 
-colorize :: Section -> Color -> String -> String
+colorize :: Section -> Color -> Text -> Text
 colorize section color str =
-  "\x1b[" ++ sectionNum ++
+  "\x1b[" <> sectionNum <>
   show (fromEnum color)
-  ++ "m" ++
-  str ++
+  <> "m" <>
+  str <>
   "\x1b[0m"
   where
     sectionNum = case section of
@@ -163,10 +165,10 @@ colorize section color str =
       Background -> "4"
 
 -- | Wrap the text in the escape codes to format according to the color and style
-style :: Style -> String -> String
+style :: Style -> Text -> Text
 style style str =
-    "\x1b[" ++            -- escape code
+    "\x1b[" <>            -- escape code
     show (fromEnum style) -- style
-    ++ "m" ++             -- delim
-    str ++                -- string
+    <> "m" <>             -- delim
+    str <>                -- string
     "\x1b[0m"             -- reset
