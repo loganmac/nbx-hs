@@ -9,7 +9,7 @@ module Shell
 where
 
 import           Control.Concurrent       (MVar, newEmptyMVar, putMVar,
-                                           takeMVar, threadDelay)
+                                           takeMVar)
 import           Control.Concurrent.Async (Async, async, link)
 import           Control.Concurrent.STM   (TQueue, atomically, newTQueue,
                                            readTQueue, tryReadTQueue,
@@ -17,7 +17,6 @@ import           Control.Concurrent.STM   (TQueue, atomically, newTQueue,
 import           Control.Monad            (unless)
 import           Data.Text                (Text, unpack)
 import           Data.Text.IO             (hGetLine)
-import           Data.Time.Clock.POSIX    (POSIXTime, getPOSIXTime)
 import           GHC.IO.Handle            (Handle)
 import           System.Exit              (ExitCode (..), exitWith)
 import           System.IO                (hIsEOF)
@@ -31,15 +30,13 @@ import           System.Process.Typed     (closed, createPipe, getStderr,
 
 -- | Driver is a collection of functions that
 -- describe what to do on process output
-data Driver = Driver
-  { sleepDuration :: Int
-  , toSpinner     :: IO ()
-  , spinner       :: Int -> Text -> IO ()
-  , spinnerFps    :: POSIXTime
-  , handleOut     :: Text -> IO ()
-  , handleErr     :: Text -> IO ()
-  , handleSuccess :: Text -> IO ()
-  , handleFailure :: Text -> [Text] -> IO ()
+data Driver a = Driver
+  { initialState  :: Text -> a
+  , handleNothing :: a -> IO a
+  , handleOut     :: a -> Text -> IO a
+  , handleErr     :: a -> Text -> IO a
+  , handleSuccess :: a -> IO ()
+  , handleFailure :: a -> IO ()
   }
 
 -- | The output of running an external process
@@ -49,13 +46,14 @@ data Output = Msg Text | Err Text | Success | Failure Int
 -- and an output channel (for reading the output)
 data Processor = Processor (TQueue Text) (TQueue Output)
 
--- | The type for a partially applied `Processor.run`
-type Shell = (Task -> Cmd -> IO ())
+-- | Shell takes a task name and an external command and
+-- executes the given callbacks in the provided driver
+type Shell = (TaskName -> Cmd -> IO ())
 
 -- | Task is the description of an external process
-type Task = Text
+type TaskName = Text
 
--- | Cmd is the external command like `cat foo` to run
+-- | Cmd is the external command like 'cat file.txt' to run
 type Cmd = Text
 
 --------------------------------------------------------------------------------
@@ -66,48 +64,42 @@ type Cmd = Text
 -- then partially applies the processor and the display driver
 -- to `execute`, returing a `Shell` that can send commands
 -- to the processor loop.
-new :: Driver -> IO Shell
+new :: Driver a -> IO Shell
 new driver = do
   processor <- Processor <$> newChan <*> newChan
   _         <- spawn $ processorLoop processor
   pure $ execute processor driver
+  where newChan = atomically newTQueue
 
 --------------------------------------------------------------------------------
 -- EXECUTE / OUTPUT LOOP
 
 -- | executes the given command in the processor
-execute :: Processor -> Driver -> Task -> Cmd -> IO ()
+execute :: Processor -> Driver a -> TaskName -> Cmd -> IO ()
 execute (Processor input output) driver task cmd = do
   send input cmd                               -- send the command to the Processor thread
-  loop 0 0 []                                  -- start the output loop with spinner at 0
-
+  loop (initialState driver task)              -- start the output loop
   where
-    loop :: Int -> POSIXTime -> [Text] -> IO ()
-    loop lastSpinPos lastSpinTime stackTrace = do
-      spinner driver lastSpinPos task          -- print the spinner
-      now <- getPOSIXTime                      -- get the current time
-      let (spinPos, spinTime) =
-            if now - lastSpinTime >=
-              (1 / spinnerFps driver)          -- if it's been enough time
-            then (lastSpinPos+1, now)          -- advance the spinner
-            else (lastSpinPos, lastSpinTime)   -- otherwise not
+    -- | try to read from the channel, returning Nothing if no value available
+    maybeReceive = atomically . tryReadTQueue
 
+    -- loop :: a -> IO
+    loop acc = do
       out <- maybeReceive output
       case out of
         Nothing -> do
-          threadDelay $ sleepDuration driver
-          toSpinner driver
-          loop spinPos spinTime stackTrace
+          newAcc <- handleNothing driver acc
+          loop newAcc
         Just (Msg msg) -> do
-          handleOut driver msg
-          loop spinPos spinTime (msg : stackTrace)
+          newAcc <- handleOut driver acc msg
+          loop newAcc
         Just (Err msg) -> do
-          handleErr driver msg
-          loop spinPos spinTime (msg : stackTrace)
+          newAcc <- handleErr driver acc msg
+          loop newAcc
         Just Success ->
-          handleSuccess driver task
+          handleSuccess driver acc
         Just (Failure c) -> do
-          handleFailure driver task stackTrace
+          handleFailure driver acc
           exitWith $ ExitFailure c
 
 --------------------------------------------------------------------------------
@@ -117,7 +109,7 @@ execute (Processor input output) driver task cmd = do
 -- will wait until stdout and stderr are empty to write the exit code.
 processorLoop :: Processor -> IO ()
 processorLoop processor@(Processor input output) = do
-  cmd <- receive input
+  cmd <- atomically $ readTQueue input -- receive input
 
   let config = setStdin closed
              $ setStdout createPipe
@@ -159,7 +151,7 @@ processorLoop processor@(Processor input output) = do
       putMVar lock () -- release the lock
 
 --------------------------------------------------------------------------------
--- THREADS
+-- THREAD AND CHANNEL HELPERS
 
 -- | new async thread, linked to calling thread (will rethrow exceptions on linked thread)
 spawn :: IO a -> IO (Async a)
@@ -167,21 +159,6 @@ spawn x = do
   thread <- async x
   link thread
   pure thread
-
---------------------------------------------------------------------------------
--- CHANNELS
-
--- | create a new channel
-newChan :: IO (TQueue a)
-newChan = atomically newTQueue
-
--- | read from the channel, blocking with retry
-receive :: TQueue a -> IO a
-receive = atomically . readTQueue
-
--- | try to read from the channel, returning Nothing if no value available
-maybeReceive :: TQueue a -> IO (Maybe a)
-maybeReceive = atomically . tryReadTQueue
 
 -- | write to the channel
 send :: TQueue a -> a -> IO ()

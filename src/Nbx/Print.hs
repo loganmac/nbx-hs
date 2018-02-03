@@ -5,7 +5,9 @@ module Nbx.Print where
 
 import           Universum
 
+import           Control.Concurrent    (threadDelay)
 import qualified Data.Text             as T
+import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import qualified System.Console.ANSI   as Term
 import           System.Console.Pretty (Color (..), Style (..), color, style)
 import qualified Text.Regex            as Regex
@@ -63,8 +65,8 @@ windowsSpinner :: SpinnerTheme
 windowsSpinner = SpinnerTheme "||||//----\\\\"
 
 -- | Prints a spinner next to the given prompt
-spinner :: SpinnerTheme -> Int -> Text -> IO ()
-spinner (SpinnerTheme theme) pos prompt =
+printSpinner :: SpinnerTheme -> Int -> Text -> IO ()
+printSpinner (SpinnerTheme theme) pos prompt =
   clearPrint $ taskIndent <> styledSpinner
 
   where
@@ -87,49 +89,84 @@ toSpinner = do
   Term.cursorUpLine 2
   Term.setCursorColumn 0
 
+spinner :: Task -> IO Task
+spinner task = do
+  printSpinner unixSpinner (spinPos task) (name task)
+  now <- getPOSIXTime
+  let lastSpinTime = lastSpin task
+      lastSpinPos = spinPos task
+
+  -- advance the spinner if it's been enough time
+  if now - lastSpinTime >= 0.05
+  then pure task {spinPos = lastSpinPos+1, lastSpin = now}
+  else pure task
+
 --------------------------------------------------------------------------------
 -- PRINTING
 
+data Task = Task
+            { name     :: Text
+            , spinPos  :: Int
+            , lastSpin :: POSIXTime
+            , stack    :: [Text]
+            }
+
+-- | Create a new task with an emtpy stack and a zeroed out spinner
+createTask :: Text -> Task
+createTask taskName =
+  Task { name = taskName, spinPos = 0, lastSpin = 0, stack = [] }
+
 -- | Clears the last line, prints a new last line, then clears the spinner
-output :: Text -> IO ()
-output str = do
+output :: Task -> Text -> IO Task
+output task str = do
+  t <- spinner task
   Term.cursorUpLine 1
   clearPrint $ taskOutputIndent <> str
   toSpinner
+  pure t
 
-out :: Text -> IO ()
-out = output . style Faint . strip
-
-err :: Text -> IO ()
-err = output . style Normal . color Red . strip
-
--- | Prints the success message
-success :: Text -> IO ()
-success x = printResult . style Bold . color Green $ "✓ " <> x
-
--- | Prints the message as a failure (red with an x)
-failure :: Text -> [Text] -> IO ()
-failure task buffer = do
-  printResult . style Bold . color Red $ "✖ " <> task
-  clearPrint "" -- explicitly to clear the line
-  clearPrint $ headerIndent <> styledErrorHeader
-  clearPrint "" -- explicitly to clear the line
-
-  forM_ (reverse buffer) $ \x -> clearPrint $ taskIndent <> styleStackTrace x
-  clearPrint ""
-  where
-    styleStackTrace = style Normal . color Red
-
-    styledErrorHeader =
-      style Bold . style Reverse . color Red
-      $ "Error executing task '" <> task <> "':"
+-- | Updates the spinner then sleeps
+handleNothing :: Task -> IO Task
+handleNothing task = do
+  t <- spinner task
+  threadDelay $ 50 * 1000 -- 50 ms
+  toSpinner
+  pure t
 
 -- | clears the spinner then prints the string in its place
 printResult :: Text -> IO ()
 printResult x = do
-  toSpinner
   clearPrint $ taskIndent <> x
   Term.clearLine
+
+-- | callback to handle output
+handleOut :: Task -> Text -> IO Task
+handleOut task = output task . style Faint . strip
+
+-- | callback to handle error
+handleErr :: Task -> Text -> IO Task
+handleErr task = output task . style Normal . color Red . strip
+
+-- | callback to handle task success
+handleSuccess :: Task -> IO ()
+handleSuccess task = printResult . style Bold . color Green $ "✓ " <> name task
+
+-- | callback to handle task failure
+handleFailure :: Task -> IO ()
+handleFailure task = do
+  printResult . style Bold . color Red $ "✖ " <> name task
+  clearPrint "" -- explicitly to clear the line
+  clearPrint $ headerIndent <> styledErrorHeader
+  clearPrint "" -- explicitly to clear the line
+
+  forM_ (reverse $ stack task) $
+    \x -> clearPrint $ taskIndent <> styleStackTrace x
+  clearPrint "" -- explicitly to clear the line
+  where
+    styleStackTrace = style Normal . color Red
+    styledErrorHeader =
+      style Bold . style Reverse . color Red
+      $ "Error executing task '" <> name task <> "':"
 
 -- | removes terminal control sequences from the string
 strip :: Text -> Text

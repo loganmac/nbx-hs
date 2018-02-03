@@ -35,7 +35,7 @@ execute cmd = do
   case cmd of
     Main    -> putTextLn "For help, run 'nbx -h'."
     Init    -> putTextLn "INIT!"
-    Push    -> pushCmd  shell header
+    Push    -> pushCmd shell header
     Status  -> putTextLn "STATUS!"
     Setup   -> putTextLn "SETUP!"
     Implode -> putTextLn "IMPLODE!"
@@ -62,16 +62,14 @@ pushCmd shell header = do
 -- SHELL DISPLAY DRIVER
 
 -- | a shell driver that pretty-prints output from processes with a spinner
-driver :: Shell.Driver
+driver :: Shell.Driver Print.Task
 driver = Shell.Driver
-  { Shell.spinnerFps    = 20
-  , Shell.toSpinner     = Print.toSpinner
-  , Shell.spinner       = Print.spinner Print.unixSpinner
-  , Shell.sleepDuration = 1 * 1000 -- 1 ms
-  , Shell.handleOut     = Print.out
-  , Shell.handleErr     = Print.err
-  , Shell.handleSuccess = Print.success
-  , Shell.handleFailure = Print.failure
+  { Shell.initialState  = Print.createTask
+  , Shell.handleNothing = Print.handleNothing
+  , Shell.handleOut     = Print.handleOut
+  , Shell.handleErr     = Print.handleErr
+  , Shell.handleSuccess = Print.handleSuccess
+  , Shell.handleFailure = Print.handleFailure
   }
 
 -- TODO: Alternate drivers
