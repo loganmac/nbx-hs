@@ -1,10 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module Main where
 
-import           Universum
-import           Command (Command (..), parse)
+import           Command   (Command (..), parse)
 import qualified Print
-import           Shell   (Shell)
+import           Shell     (Shell)
 import qualified Shell
+import           Universum
 
 main :: IO ()
 main = do
@@ -61,31 +62,27 @@ pushCmd shell header = do
 -- | a display driver that pretty-prints output from processes with a spinner
 displayDriver :: Shell.Driver
 displayDriver = Shell.Driver
-  { Shell.formatOut     = Print.formatOut
-  , Shell.formatErr     = Print.formatErr
-  , Shell.formatSuccess = Print.formatSuccess
-  , Shell.formatFailure = Print.formatFailure
+  { Shell.spinnerFps    = 20
+  , Shell.toSpinner     = Print.toSpinner
   , Shell.spinner       = Print.spinner Print.unixSpinner
-  , Shell.handleOutput  = Print.output
+  , Shell.sleepDuration = 1 * 1000 -- 1 ms
+  , Shell.handleOut     = Print.out
+  , Shell.handleErr     = Print.err
   , Shell.handleSuccess = Print.success
   , Shell.handleFailure = Print.failure
-  , Shell.toSpinner     = Print.toSpinner
   }
 
 -- | a windows display driver
 windowsDisplayDriver :: Shell.Driver
 windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
 
--- | a display driver that just logs everything out
-verboseDriver :: Shell.Driver
-verboseDriver = Shell.Driver
-  { Shell.formatOut     = identity
-  , Shell.formatErr     = identity
-  , Shell.formatSuccess = identity
-  , Shell.formatFailure = identity
-  , Shell.toSpinner     = pure ()
-  , Shell.handleOutput  = putTextLn
-  , Shell.handleSuccess = \_str             -> pure ()
-  , Shell.handleFailure = \_task _fail _buf -> pure ()
-  , Shell.spinner       = \_pos _prompt     -> pure ()
-  }
+-- -- | a display driver that just logs everything out
+-- verboseDriver :: Shell.Driver
+-- verboseDriver = Shell.Driver
+--   { Shell.toSpinner     = pure ()
+--   , Shell.handleOut     = putTextLn
+--   , Shell.handleErr     = putTextLn
+--   , Shell.handleSuccess = \_str         -> pure ()
+--   , Shell.handleFailure = \_task _buf   -> pure ()
+--   , Shell.spinner       = \_pos _prompt -> pure ()
+--   }

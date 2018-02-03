@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: abffcd28e1737d3833f7f1c05efd2f6120064fd919b28d09fce0ee6c3516fefe
+-- hash: 0cfe6e5184c45e1974a606123efd2f5ed63f3aae84b2eedd77a7978dd435cd77
 
 name:           nbx
 version:        0.1.0.0
@@ -29,7 +29,7 @@ executable nbx
   main-is: Main.hs
   hs-source-dirs:
       src
-  default-extensions: NoImplicitPrelude OverloadedStrings
+  default-extensions: OverloadedStrings
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       ansi-terminal

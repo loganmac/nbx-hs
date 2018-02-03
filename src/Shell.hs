@@ -1,22 +1,23 @@
 {-| Shell is a thread that can run external processes,
-    and call functions of the `Driver`
-    on process output.
+    display a spinner while processing (provided by `Driver`),
+    and call functions of the `Driver` on process output.
 -}
 module Shell
 (Driver(..), Shell, new)
 where
 
-import           Universum
-
-import           Control.Concurrent       (threadDelay)
+import           Control.Concurrent       (MVar, newEmptyMVar, putMVar,
+                                           takeMVar, threadDelay)
 import           Control.Concurrent.Async (Async, async, link)
-import           Control.Concurrent.STM   (TQueue, newTQueue, readTQueue,
-                                           tryReadTQueue, writeTQueue)
+import           Control.Concurrent.STM   (TQueue, atomically, newTQueue,
+                                           readTQueue, tryReadTQueue,
+                                           writeTQueue)
 import           Control.Monad            (unless)
+import           Data.Text                (Text, unpack)
 import           Data.Text.IO             (hGetLine)
 import           Data.Time.Clock.POSIX    (POSIXTime, getPOSIXTime)
 import           GHC.IO.Handle            (Handle)
-import           System.Exit              (ExitCode (..))
+import           System.Exit              (ExitCode (..), exitWith)
 import           System.IO                (hIsEOF)
 import           System.Process.Typed     (closed, createPipe, getStderr,
                                            getStdout, setStderr, setStdin,
@@ -29,15 +30,14 @@ import           System.Process.Typed     (closed, createPipe, getStderr,
 -- | Driver is a collection of functions that
 -- describe what to do on process output
 data Driver = Driver
-  { formatOut     :: Text -> Text
-  , formatErr     :: Text -> Text
-  , formatSuccess :: Text -> Text
-  , formatFailure :: Text -> Text
-  , spinner       :: Int -> Text -> IO ()
-  , handleOutput  :: Text -> IO ()
-  , handleSuccess :: Text -> IO ()
-  , handleFailure :: Text -> Text -> [Text] -> IO ()
+  { sleepDuration :: Int
   , toSpinner     :: IO ()
+  , spinner       :: Int -> Text -> IO ()
+  , spinnerFps    :: POSIXTime
+  , handleOut     :: Text -> IO ()
+  , handleErr     :: Text -> IO ()
+  , handleSuccess :: Text -> IO ()
+  , handleFailure :: Text -> [Text] -> IO ()
   }
 
 -- | The output of running an external process
@@ -81,34 +81,31 @@ execute (Processor input output) driver task cmd = do
 
   where
     loop :: Int -> POSIXTime -> [Text] -> IO ()
-    loop lastSpinPos lastSpinTime buffer = do
+    loop lastSpinPos lastSpinTime stackTrace = do
       spinner driver lastSpinPos task          -- print the spinner
       now <- getPOSIXTime                      -- get the current time
       let (spinPos, spinTime) =
-            if now - lastSpinTime >= 0.05      -- if it's been 0.05 seconds
+            if now - lastSpinTime >=
+              (1 / spinnerFps driver)          -- if it's been enough time
             then (lastSpinPos+1, now)          -- advance the spinner
             else (lastSpinPos, lastSpinTime)   -- otherwise not
 
       out <- maybeReceive output
       case out of
         Nothing -> do
-          threadDelay $ 50 * 1000              -- sleep 50 ms
+          threadDelay $ sleepDuration driver
           toSpinner driver
-          loop spinPos spinTime buffer
-        Just (Msg m) -> do
-          let formatted = formatOut driver m
-          handleOutput driver formatted
-          loop spinPos spinTime (formatted : buffer)
-        Just (Err m) -> do
-          let formatted = formatErr driver m
-          handleOutput driver formatted
-          loop spinPos spinTime (formatted : buffer)
-        Just Success -> do
-          let formatted = formatSuccess driver task
-          handleSuccess driver formatted
+          loop spinPos spinTime stackTrace
+        Just (Msg msg) -> do
+          handleOut driver msg
+          loop spinPos spinTime (msg : stackTrace)
+        Just (Err msg) -> do
+          handleErr driver msg
+          loop spinPos spinTime (msg : stackTrace)
+        Just Success ->
+          handleSuccess driver task
         Just (Failure c) -> do
-          let formatted = formatFailure driver task
-          handleFailure driver task formatted buffer
+          handleFailure driver task stackTrace
           exitWith $ ExitFailure c
 
 --------------------------------------------------------------------------------
@@ -123,14 +120,14 @@ processorLoop processor@(Processor input output) = do
   let config = setStdin closed
              $ setStdout createPipe
              $ setStderr createPipe
-             $ shell (toString cmd)
+             $ shell (unpack cmd)
 
   withProcess config $ \p -> do
     stdoutLock <- newEmptyMVar -- create locks for stdout/stderr
     stderrLock <- newEmptyMVar
 
-    _ <- spawn $ handleOut Msg (getStdout p) stdoutLock
-    _ <- spawn $ handleOut Err (getStderr p) stderrLock
+    _ <- spawn $ sendOutput Msg (getStdout p) stdoutLock
+    _ <- spawn $ sendOutput Err (getStderr p) stderrLock
 
     code <- waitExitCode p -- wait for the exit and output locks
     takeMVar stdoutLock
@@ -148,8 +145,8 @@ processorLoop processor@(Processor input output) = do
     -- | read from the handle until it's empty, writing the result
     -- (wrapped in the given wrapper type) to the output channel
     -- and then releasing the given lock
-    handleOut :: (Text -> Output) -> Handle -> MVar () -> IO ()
-    handleOut wrap handle lock = do
+    sendOutput :: (Text -> Output) -> Handle -> MVar () -> IO ()
+    sendOutput wrap handle lock = do
       let loop = do
             isDone <- hIsEOF handle
             unless isDone $ do

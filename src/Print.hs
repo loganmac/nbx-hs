@@ -1,5 +1,6 @@
 {-| A print driver and some formatting functions.
 -}
+{-# LANGUAGE NoImplicitPrelude #-}
 module Print where
 
 import           Universum
@@ -36,7 +37,7 @@ clearPrint :: Text -> IO ()
 clearPrint x = Term.clearLine >> putTextLn x
 
 --------------------------------------------------------------------------------
--- HEADER
+-- HEADERS
 
 type Header = Text -> IO ()
 
@@ -88,31 +89,6 @@ toSpinner = do
   Term.setCursorColumn 0
 
 --------------------------------------------------------------------------------
--- FORMAT OUTPUT
-
--- | formats a normal output
-formatOut :: Text -> Text
-formatOut = style Faint . strip
-
--- | formats an error
-formatErr :: Text -> Text
-formatErr = style Normal . color Red . strip
-
--- | formats a success string
-formatSuccess :: Text -> Text
-formatSuccess x = style Bold . color Green $ "✓ " <> x
-
--- | formats a failure string
-formatFailure :: Text -> Text
-formatFailure x = style Bold . color Red $ "✖ " <> x
-
--- | removes terminal control sequences from the string
-strip :: Text -> Text
-strip x = toText $ Regex.subRegex ansiEscape (toString x) ""
-  where
-    ansiEscape = Regex.mkRegex "\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]|\r|\n"
-
---------------------------------------------------------------------------------
 -- PRINTING
 
 -- | Clears the last line, prints a new last line, then clears the spinner
@@ -122,21 +98,29 @@ output str = do
   clearPrint $ taskOutputIndent <> str
   toSpinner
 
+out :: Text -> IO ()
+out = output . style Faint . strip
+
+err :: Text -> IO ()
+err = output . style Normal . color Red . strip
+
 -- | Prints the success message
 success :: Text -> IO ()
-success = printResult
+success x = printResult . style Bold . color Green $ "✓ " <> x
 
 -- | Prints the message as a failure (red with an x)
-failure :: Text -> Text -> [Text] -> IO ()
-failure task msg buffer = do
-  printResult msg
+failure :: Text -> [Text] -> IO ()
+failure task buffer = do
+  printResult . style Bold . color Red $ "✖ " <> task
   clearPrint "" -- explicitly to clear the line
   clearPrint $ headerIndent <> styledErrorHeader
   clearPrint "" -- explicitly to clear the line
 
-  forM_ (reverse buffer) $ \x -> clearPrint $ taskIndent <> x
+  forM_ (reverse buffer) $ \x -> clearPrint $ taskIndent <> styleStackTrace x
   clearPrint ""
   where
+    styleStackTrace = style Normal . color Red
+
     styledErrorHeader =
       style Bold . style Reverse . color Red
       $ "Error executing task '" <> task <> "':"
@@ -148,4 +132,8 @@ printResult x = do
   clearPrint $ taskIndent <> x
   Term.clearLine
 
-
+-- | removes terminal control sequences from the string
+strip :: Text -> Text
+strip x = toText $ Regex.subRegex ansiEscape (toString x) ""
+  where
+    ansiEscape = Regex.mkRegex "\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]|\r|\n"
