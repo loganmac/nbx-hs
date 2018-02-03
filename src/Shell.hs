@@ -16,9 +16,6 @@ import           Control.Monad            (unless)
 import           Data.Text.IO             (hGetLine)
 import           Data.Time.Clock.POSIX    (POSIXTime, getPOSIXTime)
 import           GHC.IO.Handle            (Handle)
-import           Shell.Types              (Cmd, Driver, Output (..),
-                                           Processor (Processor), Task)
-import qualified Shell.Types              as Driver
 import           System.Exit              (ExitCode (..))
 import           System.IO                (hIsEOF)
 import           System.Process.Typed     (closed, createPipe, getStderr,
@@ -105,20 +102,10 @@ run (Processor input output) driver task cmd = do
   loop 0 0 []     -- start the output loop with spinner zeroed out
 
   where
-    -- setup the Driver functions from the driver
-    spinner        = Driver.spinner       driver
-    formatOut      = Driver.formatOut     driver
-    formatErr      = Driver.formatErr     driver
-    formatSuccess  = Driver.formatSuccess driver
-    formatFailure  = Driver.formatFailure driver
-    handleOutput   = Driver.handleOutput  driver
-    handleSuccess  = Driver.handleSuccess driver
-    handleFailure  = Driver.handleFailure driver
-    toSpinner      = Driver.toSpinner     driver
 
     loop :: Int -> POSIXTime -> [Text] -> IO ()
     loop lastSpinPos lastSpinTime buffer = do
-      spinner lastSpinPos task                 -- print the spinner
+      spinner driver lastSpinPos task          -- print the spinner
       now <- getPOSIXTime                      -- get the current time
       let (spinPos, spinTime) =
             if now - lastSpinTime >= 0.05      -- if it's been 0.05 seconds
@@ -133,22 +120,22 @@ run (Processor input output) driver task cmd = do
       where
         handleAndLoop :: Int-> POSIXTime -> Text -> IO ()
         handleAndLoop spinPos spinTime str = do
-          handleOutput str
+          handleOutput driver str
           loop spinPos spinTime (str : buffer)
 
         handleMsg :: Int -> POSIXTime -> Output -> IO ()
         handleMsg spinPos spinTime msg = case msg of
-          Msg m   -> handleAndLoop spinPos spinTime $ formatOut m
-          Err m   -> handleAndLoop spinPos spinTime $ formatErr m
-          Success -> handleSuccess $ formatSuccess task
+          Msg m   -> handleAndLoop spinPos spinTime $ formatOut driver m
+          Err m   -> handleAndLoop spinPos spinTime $ formatErr driver m
+          Success -> handleSuccess driver $ formatSuccess driver task
           Failure c -> do
-            handleFailure task (formatFailure task) buffer
+            handleFailure driver task (formatFailure driver task) buffer
             exitWith $ ExitFailure c
 
         handleNoMsg :: Int -> POSIXTime -> IO ()
         handleNoMsg spinPos spinTime = do
           threadDelay $ 50 * 1000 -- sleep 50 ms
-          toSpinner
+          toSpinner driver
           loop spinPos spinTime buffer
 
 --------------------------------------------------------------------------------
