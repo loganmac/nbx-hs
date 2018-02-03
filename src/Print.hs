@@ -42,11 +42,12 @@ type Header = Text -> IO ()
 
 -- | Prints a header that describes a group of tasks
 header :: Text -> IO ()
-header s = do
+header str = do
   clearPrint ""
-  clearPrint $ headerIndent <> style Bold (color Cyan $ s <> " :")
+  clearPrint $ headerIndent <> styledHeader
   clearPrint ""
-
+  where
+    styledHeader = style Bold . color Cyan $ str <> " :"
 --------------------------------------------------------------------------------
 -- SPINNER
 
@@ -68,12 +69,12 @@ spinner (SpinnerTheme theme) pos prompt =
   where
     styledSpinner :: Text
     styledSpinner =
-      style Bold $ color Yellow
+      style Bold . color Yellow
       $ T.cons spinIcon $ " " <> styledPrompt <> "\n"
 
     styledPrompt :: Text
     styledPrompt =
-      style Underline $ color Yellow prompt
+      style Underline . color Yellow $ prompt
 
     spinIcon :: Char
     spinIcon =
@@ -99,11 +100,11 @@ formatErr = style Normal . color Red . strip
 
 -- | formats a success string
 formatSuccess :: Text -> Text
-formatSuccess x = style Bold $ color Green $ "✓ " <> x
+formatSuccess x = style Bold . color Green $ "✓ " <> x
 
 -- | formats a failure string
 formatFailure :: Text -> Text
-formatFailure x = style Bold $ color Red $ "✖ " <> x
+formatFailure x = style Bold . color Red $ "✖ " <> x
 
 -- | removes terminal control sequences from the string
 strip :: Text -> Text
@@ -137,7 +138,7 @@ failure task msg buffer = do
   clearPrint ""
   where
     styledErrorHeader =
-      style Bold $ style Reverse $ color Red
+      style Bold . style Reverse . color Red
       $ "Error executing task '" <> task <> "':"
 
 -- | clears the spinner then prints the string in its place
