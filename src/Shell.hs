@@ -61,7 +61,7 @@ type Cmd = Text
 
 -- | creates a new processor to run external processes in,
 -- spawns a thread to run the processor loop,
--- then partially applies it and the display driver
+-- then partially applies the processor and the display driver
 -- to `execute`, returing a `Shell` that can send commands
 -- to the processor loop.
 new :: Driver -> IO Shell
@@ -71,7 +71,7 @@ new driver = do
   pure $ execute processor driver
 
 --------------------------------------------------------------------------------
--- RUN COMMAND
+-- EXECUTE / OUTPUT LOOP
 
 -- | executes the given command in the processor
 execute :: Processor -> Driver -> Task -> Cmd -> IO ()
@@ -109,7 +109,7 @@ execute (Processor input output) driver task cmd = do
           exitWith $ ExitFailure c
 
 --------------------------------------------------------------------------------
--- | RESPOND TO RUN COMMAND FROM PROCESSOR THREAD
+-- | PROCESSOR LOOP
 
 -- | run the command, putting any stdout, stderr, and exits into the output channel.
 -- will wait until stdout and stderr are empty to write the exit code.
