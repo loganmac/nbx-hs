@@ -3,8 +3,8 @@
 module Print where
 
 import           Universum
-import           Prelude             ((!!))
 
+import qualified Data.Text           as T
 import qualified System.Console.ANSI as Term
 import qualified Text.Regex          as Regex
 
@@ -36,13 +36,13 @@ type Header = Text -> IO ()
 header :: Text -> IO ()
 header s = do
   putTextLn ""
-  putTextLn $ headerIndent <> (style Bold . fgColor Cyan $ (s <> " :"))
+  putTextLn $ headerIndent <> (style Bold . color Cyan $ (s <> " :"))
   putTextLn ""
 
 --------------------------------------------------------------------------------
 -- SPINNER
 
-newtype SpinnerTheme = SpinnerTheme String
+newtype SpinnerTheme = SpinnerTheme Text
 
 -- | Characters to use for the spinner
 unixSpinner :: SpinnerTheme
@@ -57,11 +57,21 @@ spinner :: SpinnerTheme -> Int -> Text -> IO ()
 spinner (SpinnerTheme theme) pos prompt = do
   Term.clearLine
   putText taskIndent
-  putTextLn $
-    style Bold . fgColor Yellow $
-      (toText [theme !! mod pos (length theme)]) <>
-        " " <> (style Underline . fgColor Yellow $ prompt)
+  putTextLn coloredSpinner
   putTextLn ""
+
+  where
+   coloredSpinner :: Text
+   coloredSpinner =
+     style Bold $ color Yellow $ T.cons spinIcon $ " " <> styledPrompt
+
+   styledPrompt :: Text
+   styledPrompt =
+     style Underline $ color Yellow prompt
+
+   spinIcon :: Char
+   spinIcon =
+     T.index theme $ mod pos (length theme)
 
 -- | Move to the spinner
 toSpinner :: IO ()
@@ -78,15 +88,15 @@ formatOut = style Faint . strip
 
 -- | formats an error
 formatErr :: Text -> Text
-formatErr = style Normal . fgColor Red . strip
+formatErr = style Normal . color Red . strip
 
 -- | formats a success string
 formatSuccess :: Text -> Text
-formatSuccess str = style Bold . fgColor Green $ "✓ " <> str
+formatSuccess str = style Bold . color Green $ "✓ " <> str
 
 -- | formats a failure string
 formatFailure :: Text -> Text
-formatFailure str = style Bold . fgColor Red $ "✖ " <> str
+formatFailure str = style Bold . color Red $ "✖ " <> str
 
 -- | removes terminal control sequences from the string
 strip :: Text -> Text
@@ -115,7 +125,7 @@ failure task msg buffer = do
   printResult msg
   putTextLn ""
   putTextLn $ headerIndent <>
-    (style Bold . style Reverse . fgColor Red $ "Error executing task '" <> task <> "':")
+    (style Bold . style Reverse . color Red $ "Error executing task '" <> task <> "':")
   putTextLn ""
 
   forM_ (reverse buffer) (\x -> putTextLn $ taskIndent <> x)
@@ -145,17 +155,17 @@ data Style
   deriving (Enum)
 
 -- | Helper to set foreground color
-fgColor :: Color -> Text -> Text
-fgColor = colorize Foreground
+color :: Color -> Text -> Text
+color = colorize Foreground
 
 -- | Helper to set background color
 bgColor :: Color -> Text -> Text
 bgColor = colorize Background
 
 colorize :: Section -> Color -> Text -> Text
-colorize section color str =
+colorize section color' str =
   "\x1b[" <> sectionNum <>
-  show (fromEnum color)
+  show (fromEnum color')
   <> "m" <>
   str <>
   "\x1b[0m"
