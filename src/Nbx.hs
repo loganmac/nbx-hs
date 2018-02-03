@@ -61,7 +61,7 @@ pushCmd shell header = do
 --------------------------------------------------------------------------------
 -- SHELL DISPLAY DRIVER
 
--- | a display driver that pretty-prints output from processes with a spinner
+-- | a shell driver that pretty-prints output from processes with a spinner
 driver :: Shell.Driver
 driver = Shell.Driver
   { Shell.spinnerFps    = 20
@@ -77,16 +77,18 @@ driver = Shell.Driver
 -- TODO: Alternate drivers
 
 -- | a windows display driver
--- windowsDisplayDriver :: Shell.Driver
--- windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
+-- windowsDriver :: Shell.Driver
+-- windowsDriver = driver {Shell.spinner = Print.spinner Print.windowsSpinner}
 
 -- -- | a display driver that just logs everything out
 -- verboseDriver :: Shell.Driver
 -- verboseDriver = Shell.Driver
---   { Shell.toSpinner     = pure ()
+--   { Shell.spinnerFps    = 1
+--   , Shell.toSpinner     = pure ()
+--   , Shell.spinner       = \_pos _prompt -> pure ()
+--   , Shell.sleepDuration = 1 * 1000 -- 1 ms
 --   , Shell.handleOut     = putTextLn
 --   , Shell.handleErr     = putTextLn
---   , Shell.handleSuccess = \_str         -> pure ()
---   , Shell.handleFailure = \_task _buf   -> pure ()
---   , Shell.spinner       = \_pos _prompt -> pure ()
+--   , Shell.handleSuccess = putTextLn
+--   , Shell.handleFailure = \_task _buf -> pure ()
 --   }
