@@ -1,4 +1,6 @@
 {-| A print driver and some formatting functions.
+It uses Strings instead of ByteStrings because of
+better regex support for removing ANSI escape sequences.
 -}
 module Print where
 
@@ -56,9 +58,9 @@ spinner (SpinnerTheme theme) pos prompt = do
   Term.clearLine
   putStr taskIndent
   putStrLn $
-    style Bold . color Yellow $
-      theme !! mod pos (length theme) :
-        ' ' : (style Underline. color Yellow $ prompt)
+    style Bold $ color Yellow $
+      theme !! mod pos (length theme) : ' ' :
+      (style Underline $ color Yellow $ prompt)
   putStrLn ""
 
 -- | Move to the spinner
