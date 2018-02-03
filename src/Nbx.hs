@@ -1,35 +1,37 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module Main where
+module Nbx
+(Command(..) , execute)
+where
 
-import           Command   (Command (..), parse)
-import qualified Print
+import qualified Nbx.Print as Print
 import           Shell     (Shell)
 import qualified Shell
 import           Universum
 
-main :: IO ()
-main = do
-                                        -- here we would do things like check the config,
-                                        -- read .nbx.yml, etc.
-  let header = Print.header             -- define a function to print headers
-  shell <- Shell.new displayDriver      -- create a way to run external processes
+--------------------------------------------------------------------------------
+-- COMMANDS
 
-  -- TODO: turn this into verbose mode
-  -- let header x = do
-  --       putTextLn ""
-  --       putTextLn x
-  --       putTextLn ""
-  -- shell <- Shell.new verboseDriver
-
-  cmd   <- parse                        -- parse the command from the CLI
-  execute shell header cmd              -- execute it, passing the shell and command
+-- | Commands that are recognized and parsed by the CLI
+data Command
+  = Main
+  | Init
+  | Push
+  | Status
+  | Setup
+  | Implode
+  | Version
 
 --------------------------------------------------------------------------------
 -- COMMAND EXECUTION
 
 -- | execute a command
-execute :: Shell -> Print.Header -> Command -> IO ()
-execute shell header cmd =
+execute :: Command -> IO ()
+execute cmd = do
+                            -- here we would do things like check the config,
+                            -- read .nbx.yml, etc.
+  let header = Print.header -- define a function to print headers
+  shell <- Shell.new driver -- create a way to run external processes
+
   case cmd of
     Main    -> putTextLn "For help, run 'nbx -h'."
     Init    -> putTextLn "INIT!"
@@ -60,8 +62,8 @@ pushCmd shell header = do
 -- SHELL DISPLAY DRIVER
 
 -- | a display driver that pretty-prints output from processes with a spinner
-displayDriver :: Shell.Driver
-displayDriver = Shell.Driver
+driver :: Shell.Driver
+driver = Shell.Driver
   { Shell.spinnerFps    = 20
   , Shell.toSpinner     = Print.toSpinner
   , Shell.spinner       = Print.spinner Print.unixSpinner
@@ -72,9 +74,11 @@ displayDriver = Shell.Driver
   , Shell.handleFailure = Print.failure
   }
 
+-- TODO: Alternate drivers
+
 -- | a windows display driver
-windowsDisplayDriver :: Shell.Driver
-windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
+-- windowsDisplayDriver :: Shell.Driver
+-- windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
 
 -- -- | a display driver that just logs everything out
 -- verboseDriver :: Shell.Driver

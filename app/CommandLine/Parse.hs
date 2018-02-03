@@ -1,21 +1,10 @@
 {-| Commands recognized by the CLI, and how to parse them
 -}
-module Command where
+module CommandLine.Parse where
 
+import           Nbx    (Command (..))
 import           Turtle (Parser, options, subcommand, (<|>))
 
---------------------------------------------------------------------------------
--- COMMANDS
-
--- | Commands that are recognized and parsed by the CLI
-data Command
-  = Main
-  | Init
-  | Push
-  | Status
-  | Setup
-  | Implode
-  | Version
 
 --------------------------------------------------------------------------------
 -- PARSING

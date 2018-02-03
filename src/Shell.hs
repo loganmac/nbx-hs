@@ -1,6 +1,8 @@
 {-| Shell is a thread that can run external processes,
     display a spinner while processing (provided by `Driver`),
     and call functions of the `Driver` on process output.
+
+    TODO: move to external library
 -}
 module Shell
 (Driver(..), Shell, new)

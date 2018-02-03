@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0cfe6e5184c45e1974a606123efd2f5ed63f3aae84b2eedd77a7978dd435cd77
+-- hash: 21d4c3a99be55463e668088f0284a040e4cdb713cda436de9fef98511e5226f8
 
 name:           nbx
 version:        0.1.0.0
@@ -25,12 +25,11 @@ source-repository head
   type: git
   location: https://github.com/loganmac/nbx
 
-executable nbx
-  main-is: Main.hs
+library
   hs-source-dirs:
       src
   default-extensions: OverloadedStrings
-  ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs
   build-depends:
       ansi-terminal
     , async
@@ -44,9 +43,35 @@ executable nbx
     , turtle
     , typed-process
     , universum
-  other-modules:
-      Command
-      Print
+  exposed-modules:
+      Nbx
+      Nbx.Print
       Shell
+  other-modules:
+      Paths_nbx
+  default-language: Haskell2010
+
+executable nbx
+  main-is: CommandLine.hs
+  hs-source-dirs:
+      app
+  default-extensions: OverloadedStrings
+  ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      ansi-terminal
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , nbx
+    , pretty-terminal
+    , regex-compat
+    , stm
+    , text
+    , time
+    , turtle
+    , typed-process
+    , universum
+  other-modules:
+      CommandLine.Parse
       Paths_nbx
   default-language: Haskell2010

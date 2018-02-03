@@ -37,25 +37,26 @@ dependencies:
 - universum
 
 ghc-options:
+
   - -Wall
   - -Werror
   - -Wincomplete-record-updates
   - -Wincomplete-uni-patterns
   - -Wtabs
 
-# library:
-#   source-dirs: src
+library:
+  source-dirs: src
 
 executables:
   nbx:
-    main:                Main.hs
-    source-dirs:         src
+    main:                CommandLine.hs
+    source-dirs:         app
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    # dependencies:
-    # - nbx
+    dependencies:
+    - nbx
 
 # tests:
 #   nbox-test:

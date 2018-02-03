@@ -1,7 +1,7 @@
 {-| A print driver and some formatting functions.
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
-module Print where
+module Nbx.Print where
 
 import           Universum
 
@@ -80,7 +80,6 @@ spinner (SpinnerTheme theme) pos prompt =
     spinIcon :: Char
     spinIcon =
       T.index theme $ mod pos (length theme)
-
 
 -- | Move to the spinner
 toSpinner :: IO ()
