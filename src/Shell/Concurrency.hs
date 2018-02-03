@@ -7,10 +7,11 @@ module Shell.Concurrency
   , newLock, wait, done
   ) where
 
-import           Control.Concurrent       (MVar, newEmptyMVar, putMVar,
-                                           takeMVar, threadDelay)
-import           Control.Concurrent.Async (Async, async, cancel, link)
-import           Control.Concurrent.STM   (TQueue, atomically, newTQueue,
+import           Universum                hiding (second)
+
+import           Control.Concurrent       (threadDelay)
+import           Control.Concurrent.Async (Async, async, link)
+import           Control.Concurrent.STM   (TQueue, newTQueue,
                                            readTQueue, tryReadTQueue,
                                            writeTQueue)
 

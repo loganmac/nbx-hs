@@ -19,6 +19,10 @@ extra-source-files:
 # common to point users to the README.md file.
 description:         Please see the README on Github at <https://github.com/loganmac/nbx#readme>
 
+default-extensions:
+- NoImplicitPrelude
+- OverloadedStrings
+
 dependencies:
 - ansi-terminal
 - async
@@ -30,6 +34,14 @@ dependencies:
 - time
 - turtle
 - typed-process
+- universum
+
+ghc-options:
+  - -Wall
+  - -Werror
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wtabs
 
 # library:
 #   source-dirs: src

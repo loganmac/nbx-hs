@@ -5,18 +5,21 @@
 -}
 module Shell.Internal where
 
+import           Universum
+
 import           Control.Monad         (unless)
+import           Data.Text.IO          (hGetLine)
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import           GHC.IO.Handle         (Handle)
 import           Shell.Concurrency     (Chan, Lock, done, maybeReceive,
                                         millisecond, newChan, newLock, receive,
                                         send, sleep, spawn, wait)
-import           Shell.Types           (Cmd, Driver (..), Output (..),
-                                        Processor (..), Task)
+import           Shell.Types           (Cmd, Driver, Output (..),
+                                        Processor (Processor), Task)
 import qualified Shell.Types           as Driver
-import           System.Exit           (ExitCode (..), exitWith)
-import           System.IO             (hGetLine, hIsEOF)
-import           System.Process.Typed  (Process, closed, createPipe, getStderr,
+import           System.Exit           (ExitCode (..))
+import           System.IO             (hIsEOF)
+import           System.Process.Typed  (closed, createPipe, getStderr,
                                         getStdout, setStderr, setStdin,
                                         setStdout, shell, waitExitCode,
                                         withProcess)
@@ -67,7 +70,7 @@ run (Processor input output) driver task cmd = do
     handleFailure  = Driver.handleFailure driver
     toSpinner      = Driver.toSpinner     driver
 
-    loop :: Int -> POSIXTime -> [String] -> IO ()
+    loop :: Int -> POSIXTime -> [Text] -> IO ()
     loop lastSpinPos lastSpinTime buffer = do
       spinner lastSpinPos task               -- print the spinner
       now <- getPOSIXTime                    -- get the current time
@@ -82,7 +85,7 @@ run (Processor input output) driver task cmd = do
         (handleMsg spinPos spinTime) out     -- handle if there's ouput
 
       where
-        handleAndLoop :: Int-> POSIXTime -> String -> IO ()
+        handleAndLoop :: Int-> POSIXTime -> Text -> IO ()
         handleAndLoop spinPos spinTime str = do
           handleOutput str
           loop spinPos spinTime (str : buffer)
@@ -107,12 +110,12 @@ run (Processor input output) driver task cmd = do
 
 -- | run the command, putting any stdout, stderr, and exits into the output channel.
 -- will wait until stdout and stderr are empty to write the exit code.
-runCmd :: Chan Output -> String -> IO ()
+runCmd :: Chan Output -> Text -> IO ()
 runCmd output cmd = do
   let config = setStdin closed
              $ setStdout createPipe
              $ setStderr createPipe
-             $ shell cmd
+             $ shell (toString cmd)
 
   withProcess config $ \p -> do
     stdoutLock <- newLock
@@ -132,11 +135,11 @@ runCmd output cmd = do
 -- | read from the handle until it's empty, writing to the result
 -- (wrapped in the given wrapper type) to the output channel
 -- and then releasing the given lock
-handleOut :: Chan Output -> (String -> Output) -> Handle -> Lock -> IO ()
+handleOut :: Chan Output -> (Text -> Output) -> Handle -> Lock -> IO ()
 handleOut chan wrap h lock = do
   let loop = do
-        done <- hIsEOF h
-        unless done $ do
+        isDone <- hIsEOF h
+        unless isDone $ do
           out <- hGetLine h
           send chan $ wrap out
           loop

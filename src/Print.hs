@@ -2,45 +2,54 @@
 -}
 module Print where
 
-import           Control.Monad       (forM_)
+import           Universum
+
+import qualified Data.Text           as T
 import qualified System.Console.ANSI as Term
 import qualified Text.Regex          as Regex
 
 --------------------------------------------------------------------------------
 -- CONSTANTS
 
--- | indentaion to use before a header
-headerIndent :: String
+-- | indentation to use before a header
+headerIndent :: Text
 headerIndent = spaces 2
 
 -- | indentation to use before a task
-taskIndent :: String
+taskIndent :: Text
 taskIndent = spaces 4
 
 -- | indentation to use before the output of a task
-taskOutputIndent :: String
+taskOutputIndent :: Text
 taskOutputIndent = spaces 6
 
 -- | a string with the given number of spaces
-spaces :: Int -> String
-spaces n = replicate n ' '
+spaces :: Int -> Text
+spaces n = T.replicate n " "
+
+--------------------------------------------------------------------------------
+-- CLEAR PRINT
+
+-- | Helper to clear then print (since we do so much re-writing)
+clearPrint :: Text -> IO ()
+clearPrint x = Term.clearLine >> putTextLn x
 
 --------------------------------------------------------------------------------
 -- HEADER
 
-type Header = String -> IO ()
+type Header = Text -> IO ()
 
 -- | Prints a header that describes a group of tasks
-header :: String -> IO ()
+header :: Text -> IO ()
 header s = do
-  putStrLn ""
-  putStrLn $ headerIndent ++ (style Bold . color Cyan $ (s ++ " :"))
-  putStrLn ""
+  clearPrint ""
+  clearPrint $ headerIndent <> (style Bold . color Cyan $ (s <> " :"))
+  clearPrint ""
 
 --------------------------------------------------------------------------------
 -- SPINNER
 
-newtype SpinnerTheme = SpinnerTheme String
+newtype SpinnerTheme = SpinnerTheme Text
 
 -- | Characters to use for the spinner
 unixSpinner :: SpinnerTheme
@@ -51,15 +60,24 @@ windowsSpinner :: SpinnerTheme
 windowsSpinner = SpinnerTheme "||||//----\\\\"
 
 -- | Prints a spinner next to the given prompt
-spinner :: SpinnerTheme -> Int -> String -> IO ()
-spinner (SpinnerTheme theme) pos prompt = do
-  Term.clearLine
-  putStr taskIndent
-  putStrLn $
-    style Bold $ color Yellow $
-      theme !! mod pos (length theme) : ' ' :
-      (style Underline $ color Yellow $ prompt)
-  putStrLn ""
+spinner :: SpinnerTheme -> Int -> Text -> IO ()
+spinner (SpinnerTheme theme) pos prompt =
+  clearPrint $ taskIndent <> styledSpinner
+
+  where
+    styledSpinner :: Text
+    styledSpinner =
+      style Bold $ color Yellow
+      $ T.cons spinIcon $ " " <> styledPrompt <> "\n"
+
+    styledPrompt :: Text
+    styledPrompt =
+      style Underline $ color Yellow prompt
+
+    spinIcon :: Char
+    spinIcon =
+      T.index theme $ mod pos (length theme)
+
 
 -- | Move to the spinner
 toSpinner :: IO ()
@@ -71,24 +89,24 @@ toSpinner = do
 -- FORMAT OUTPUT
 
 -- | formats a normal output
-formatOut :: String -> String
+formatOut :: Text -> Text
 formatOut = style Faint . strip
 
 -- | formats an error
-formatErr :: String -> String
+formatErr :: Text -> Text
 formatErr = style Normal . color Red . strip
 
 -- | formats a success string
-formatSuccess :: String -> String
-formatSuccess str = style Bold . color Green $ "✓ " ++ str
+formatSuccess :: Text -> Text
+formatSuccess x = style Bold . color Green $ "✓ " <> x
 
 -- | formats a failure string
-formatFailure :: String -> String
-formatFailure str = style Bold . color Red $ "✖ " ++ str
+formatFailure :: Text -> Text
+formatFailure x = style Bold . color Red $ "✖ " <> x
 
 -- | removes terminal control sequences from the string
-strip :: String -> String
-strip str = Regex.subRegex ansiEscape str ""
+strip :: Text -> Text
+strip x = toText $ Regex.subRegex ansiEscape (toString x) ""
   where
     ansiEscape = Regex.mkRegex "\x1b[[][?0123456789]*;?[?0123456789]*[ABEFHJRSTfminsulhp]|\r|\n"
 
@@ -96,35 +114,33 @@ strip str = Regex.subRegex ansiEscape str ""
 -- PRINTING
 
 -- | Clears the last line, prints a new last line, then clears the spinner
-output :: String -> IO ()
+output :: Text -> IO ()
 output str = do
   Term.cursorUpLine 1
-  Term.clearLine
-  putStrLn (taskOutputIndent ++ str)
+  clearPrint $ taskOutputIndent <> str
   toSpinner
 
 -- | Prints the success message
-success :: String -> IO ()
+success :: Text -> IO ()
 success = printResult
 
 -- | Prints the message as a failure (red with an x)
-failure :: String -> String -> [String] -> IO ()
-failure task failure buffer = do
-  printResult failure
-  putStrLn ""
-  putStrLn $ headerIndent ++
-    (style Bold . style Reverse . color Red $ "Error executing task '" ++ task ++ "':")
-  putStrLn ""
+failure :: Text -> Text -> [Text] -> IO ()
+failure task msg buffer = do
+  printResult msg
+  clearPrint "" -- explicitly to clear the line
+  clearPrint $ headerIndent <>
+    (style Bold . style Reverse . color Red $ "Error executing task '" <> task <> "':")
+  clearPrint "" -- explicitly to clear the line
 
-  forM_ (reverse buffer) (\x -> putStrLn $ taskIndent ++ x)
-  putStrLn ""
+  forM_ (reverse buffer) $ \x -> clearPrint $ taskIndent <> x
+  clearPrint ""
 
 -- | clears the spinner then prints the string in its place
-printResult :: String -> IO ()
-printResult str = do
+printResult :: Text -> IO ()
+printResult x = do
   toSpinner
-  Term.clearLine
-  putStrLn $ taskIndent ++ str
+  clearPrint $ taskIndent <> x
   Term.clearLine
 
 --------------------------------------------------------------------------------
@@ -143,30 +159,32 @@ data Style
   deriving (Enum)
 
 -- | Helper to set foreground color
-color :: Color -> String -> String
+color :: Color -> Text -> Text
 color = colorize Foreground
 
 -- | Helper to set background color
-bgColor :: Color -> String -> String
+bgColor :: Color -> Text -> Text
 bgColor = colorize Background
 
-colorize :: Section -> Color -> String -> String
-colorize section color str =
-  "\x1b[" ++ sectionNum ++
-  show (fromEnum color)
-  ++ "m" ++
-  str ++
-  "\x1b[0m"
+colorize :: Section -> Color -> Text -> Text
+colorize section col str =
+  "\x1b[" <>          -- escape code
+  sectionNum <>       -- bg/foreground
+  show (fromEnum col) -- color code
+  <> "m" <>           -- delim
+  str <>              -- inner string
+  "\x1b[0m"           -- reset
   where
+    sectionNum :: Text
     sectionNum = case section of
       Foreground -> "9"
       Background -> "4"
 
 -- | Wrap the text in the escape codes to format according to the color and style
-style :: Style -> String -> String
-style style str =
-    "\x1b[" ++            -- escape code
-    show (fromEnum style) -- style
-    ++ "m" ++             -- delim
-    str ++                -- string
-    "\x1b[0m"             -- reset
+style :: Style -> Text -> Text
+style sty str =
+    "\x1b[" <>             -- escape code
+    show (fromEnum sty) -- style
+    <> "m" <>              -- delim
+    str <>                 -- string
+    "\x1b[0m"              -- reset
