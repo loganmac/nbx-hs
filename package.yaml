@@ -36,6 +36,13 @@ dependencies:
 - typed-process
 - universum
 
+ghc-options:
+  - -Wall
+  - -Werror
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wtabs
+
 # library:
 #   source-dirs: src
 

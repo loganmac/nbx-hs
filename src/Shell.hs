@@ -2,13 +2,12 @@
 based on the response.
 -}
 module Shell
-(new, Shell, Driver(..))
+(Driver(..), Shell, new)
 where
 
 import           Universum
-import           Shell.Internal (mkProcessor, processor, run)
-import           Shell.Types    (Cmd, Driver (..), Output (..), Processor (..),
-                                 Shell, Task)
+import           Shell.Internal (mkProcessor, run)
+import           Shell.Types (Driver(..), Shell)
 
 -- | creates a new processor to run external processes in,
 -- then partially applies it and the display driver

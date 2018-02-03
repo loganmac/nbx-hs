@@ -73,6 +73,7 @@ displayDriver = Shell.Driver
   }
 
 -- | a windows display driver
+windowsDisplayDriver :: Shell.Driver
 windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
 
 -- | a display driver that just logs everything out

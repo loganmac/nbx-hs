@@ -14,12 +14,12 @@ import           GHC.IO.Handle         (Handle)
 import           Shell.Concurrency     (Chan, Lock, done, maybeReceive,
                                         millisecond, newChan, newLock, receive,
                                         send, sleep, spawn, wait)
-import           Shell.Types           (Cmd, Driver (..), Output (..),
-                                        Processor (..), Task)
+import           Shell.Types           (Cmd, Driver, Output (..),
+                                        Processor (Processor), Task)
 import qualified Shell.Types           as Driver
 import           System.Exit           (ExitCode (..))
 import           System.IO             (hIsEOF)
-import           System.Process.Typed  (Process, closed, createPipe, getStderr,
+import           System.Process.Typed  (closed, createPipe, getStderr,
                                         getStdout, setStderr, setStdin,
                                         setStdout, shell, waitExitCode,
                                         withProcess)
@@ -88,7 +88,7 @@ run (Processor input output) driver task cmd = do
         handleAndLoop :: Int-> POSIXTime -> Text -> IO ()
         handleAndLoop spinPos spinTime str = do
           handleOutput str
-          loop spinPos spinTime ([str] <> buffer)
+          loop spinPos spinTime (str : buffer)
 
         handleMsg :: Int -> POSIXTime -> Output -> IO ()
         handleMsg spinPos spinTime msg = case msg of
@@ -138,8 +138,8 @@ runCmd output cmd = do
 handleOut :: Chan Output -> (Text -> Output) -> Handle -> Lock -> IO ()
 handleOut chan wrap h lock = do
   let loop = do
-        done <- hIsEOF h
-        unless done $ do
+        isDone <- hIsEOF h
+        unless isDone $ do
           out <- hGetLine h
           send chan $ wrap out
           loop
