@@ -2,8 +2,8 @@
 -}
 module Print where
 
-import           Universum
 import           Prelude             ((!!))
+import           Universum
 
 import qualified System.Console.ANSI as Term
 import qualified Text.Regex          as Regex
@@ -59,7 +59,7 @@ spinner (SpinnerTheme theme) pos prompt = do
   putText taskIndent
   putTextLn $
     style Bold . color Yellow $
-      (toText [theme !! mod pos (length theme)]) <>
+      toText [theme !! mod pos (length theme)] <>
         " " <> (style Underline . color Yellow $ prompt)
   putTextLn ""
 
@@ -102,7 +102,7 @@ output :: Text -> IO ()
 output str = do
   Term.cursorUpLine 1
   Term.clearLine
-  putTextLn (taskOutputIndent <> str)
+  putTextLn $ taskOutputIndent <> str
   toSpinner
 
 -- | Prints the success message
@@ -115,10 +115,11 @@ failure task failure buffer = do
   printResult failure
   putTextLn ""
   putTextLn $ headerIndent <>
-    (style Bold . style Reverse . color Red $ "Error executing task '" <> task <> "':")
+    ( style Bold . style Reverse . color Red
+    $ "Error executing task '" <> task <> "':" )
   putTextLn ""
 
-  forM_ (reverse buffer) (\x -> putTextLn $ taskIndent <> x)
+  forM_ (reverse buffer) $ \x -> putTextLn $ taskIndent <> x
   putTextLn ""
 
 -- | clears the spinner then prints the string in its place

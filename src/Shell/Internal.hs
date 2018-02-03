@@ -8,6 +8,7 @@ module Shell.Internal where
 import           Universum
 
 import           Control.Monad         (unless)
+import           Data.Text.IO          (hGetLine)
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
 import           GHC.IO.Handle         (Handle)
 import           Shell.Concurrency     (Chan, Lock, done, maybeReceive,
@@ -17,7 +18,7 @@ import           Shell.Types           (Cmd, Driver (..), Output (..),
                                         Processor (..), Task)
 import qualified Shell.Types           as Driver
 import           System.Exit           (ExitCode (..))
-import           System.IO             (hGetLine, hIsEOF)
+import           System.IO             (hIsEOF)
 import           System.Process.Typed  (Process, closed, createPipe, getStderr,
                                         getStdout, setStderr, setStdin,
                                         setStdout, shell, waitExitCode,
@@ -140,7 +141,7 @@ handleOut chan wrap h lock = do
         done <- hIsEOF h
         unless done $ do
           out <- hGetLine h
-          send chan $ wrap (toText out)
+          send chan $ wrap out
           loop
   loop
   done lock
