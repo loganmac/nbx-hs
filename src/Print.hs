@@ -78,6 +78,7 @@ spinner (SpinnerTheme theme) pos prompt =
     spinIcon =
       T.index theme $ mod pos (length theme)
 
+
 -- | Move to the spinner
 toSpinner :: IO ()
 toSpinner = do
