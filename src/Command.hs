@@ -3,7 +3,6 @@
 module Command where
 
 import           Universum
-import           Data.Text (Text)
 import           Turtle    (Parser, options, subcommand, (<|>))
 
 

@@ -36,7 +36,7 @@ type Header = Text -> IO ()
 header :: Text -> IO ()
 header s = do
   putTextLn ""
-  putTextLn $ headerIndent <> (style Bold . color Cyan $ (s <> " :"))
+  putTextLn $ headerIndent <> (style Bold . fgColor Cyan $ (s <> " :"))
   putTextLn ""
 
 --------------------------------------------------------------------------------
@@ -58,9 +58,9 @@ spinner (SpinnerTheme theme) pos prompt = do
   Term.clearLine
   putText taskIndent
   putTextLn $
-    style Bold . color Yellow $
+    style Bold . fgColor Yellow $
       (toText [theme !! mod pos (length theme)]) <>
-        " " <> (style Underline . color Yellow $ prompt)
+        " " <> (style Underline . fgColor Yellow $ prompt)
   putTextLn ""
 
 -- | Move to the spinner
@@ -78,15 +78,15 @@ formatOut = style Faint . strip
 
 -- | formats an error
 formatErr :: Text -> Text
-formatErr = style Normal . color Red . strip
+formatErr = style Normal . fgColor Red . strip
 
 -- | formats a success string
 formatSuccess :: Text -> Text
-formatSuccess str = style Bold . color Green $ "✓ " <> str
+formatSuccess str = style Bold . fgColor Green $ "✓ " <> str
 
 -- | formats a failure string
 formatFailure :: Text -> Text
-formatFailure str = style Bold . color Red $ "✖ " <> str
+formatFailure str = style Bold . fgColor Red $ "✖ " <> str
 
 -- | removes terminal control sequences from the string
 strip :: Text -> Text
@@ -111,11 +111,11 @@ success = printResult
 
 -- | Prints the message as a failure (red with an x)
 failure :: Text -> Text -> [Text] -> IO ()
-failure task failure buffer = do
-  printResult failure
+failure task msg buffer = do
+  printResult msg
   putTextLn ""
   putTextLn $ headerIndent <>
-    (style Bold . style Reverse . color Red $ "Error executing task '" <> task <> "':")
+    (style Bold . style Reverse . fgColor Red $ "Error executing task '" <> task <> "':")
   putTextLn ""
 
   forM_ (reverse buffer) (\x -> putTextLn $ taskIndent <> x)
@@ -145,8 +145,8 @@ data Style
   deriving (Enum)
 
 -- | Helper to set foreground color
-color :: Color -> Text -> Text
-color = colorize Foreground
+fgColor :: Color -> Text -> Text
+fgColor = colorize Foreground
 
 -- | Helper to set background color
 bgColor :: Color -> Text -> Text
@@ -166,9 +166,9 @@ colorize section color str =
 
 -- | Wrap the text in the escape codes to format according to the color and style
 style :: Style -> Text -> Text
-style style str =
-    "\x1b[" <>            -- escape code
-    show (fromEnum style) -- style
-    <> "m" <>             -- delim
-    str <>                -- string
-    "\x1b[0m"             -- reset
+style style' str =
+    "\x1b[" <>             -- escape code
+    show (fromEnum style') -- style
+    <> "m" <>              -- delim
+    str <>                 -- string
+    "\x1b[0m"              -- reset
