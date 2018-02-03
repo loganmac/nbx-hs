@@ -1,6 +1,4 @@
 {-| A print driver and some formatting functions.
-It uses Strings instead of ByteStrings because of
-better regex support for removing ANSI escape sequences.
 -}
 module Print where
 
