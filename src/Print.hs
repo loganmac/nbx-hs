@@ -9,10 +9,6 @@ import qualified Text.Regex          as Regex
 --------------------------------------------------------------------------------
 -- CONSTANTS
 
--- | Characters to use for the spinner
-spinnerTheme :: String
-spinnerTheme = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-
 -- | indentaion to use before a header
 headerIndent :: String
 headerIndent = spaces 2
@@ -44,14 +40,24 @@ header s = do
 --------------------------------------------------------------------------------
 -- SPINNER
 
+newtype SpinnerTheme = SpinnerTheme String
+
+-- | Characters to use for the spinner
+unixSpinner :: SpinnerTheme
+unixSpinner = SpinnerTheme "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+-- | spinner that works on windows
+windowsSpinner :: SpinnerTheme
+windowsSpinner = SpinnerTheme "||||//----\\\\"
+
 -- | Prints a spinner next to the given prompt
-spinner :: Int -> String -> IO ()
-spinner pos prompt = do
+spinner :: SpinnerTheme -> Int -> String -> IO ()
+spinner (SpinnerTheme theme) pos prompt = do
   Term.clearLine
   putStr taskIndent
   putStrLn $
     style Bold . color Yellow $
-      spinnerTheme !! mod pos (length spinnerTheme) :
+      theme !! mod pos (length theme) :
         ' ' : (style Underline. color Yellow $ prompt)
   putStrLn ""
 
@@ -78,7 +84,7 @@ formatSuccess str = style Bold . color Green $ "✓ " ++ str
 
 -- | formats a failure string
 formatFailure :: String -> String
-formatFailure str = style Bold. color Red $ "✖ " ++ str
+formatFailure str = style Bold . color Red $ "✖ " ++ str
 
 -- | removes terminal control sequences from the string
 strip :: String -> String

@@ -13,6 +13,6 @@ import           Shell.Types    (Cmd, Driver (..), Output (..), Processor (..),
 -- then partially applies it and the display driver
 -- to `Shell.Internal.run`, returing a `Shell`
 new :: Driver -> IO Shell
-new printer = do
+new driver = do
   p <- mkProcessor
-  pure $ run p printer
+  pure $ run p driver

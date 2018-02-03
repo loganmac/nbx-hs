@@ -63,12 +63,15 @@ displayDriver = Shell.Driver
   , Shell.formatErr     = Print.formatErr
   , Shell.formatSuccess = Print.formatSuccess
   , Shell.formatFailure = Print.formatFailure
-  , Shell.spinner       = Print.spinner
+  , Shell.spinner       = Print.spinner Print.unixSpinner
   , Shell.handleOutput  = Print.output
   , Shell.handleSuccess = Print.success
   , Shell.handleFailure = Print.failure
   , Shell.toSpinner     = Print.toSpinner
   }
+
+-- | a windows display driver
+windowsDisplayDriver = displayDriver {Shell.spinner = Print.spinner Print.windowsSpinner}
 
 -- | a display driver that just logs everything out
 verboseDriver = Shell.Driver

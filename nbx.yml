@@ -1,0 +1,81 @@
+web:
+  dev:
+    image: nanobox/python-3-dev
+    run:
+      nginx:  nginx -c /etc/nginx.conf
+      python: python app.py
+    aliases:
+      - nanoapp.local
+    dependencies:
+      - service1
+      - service2
+      - s3
+
+  live:
+    image: nanobox/python-3
+    build:
+      image: nanobox/python-3-dev
+      steps:
+        - python compile.py
+      dirs:
+        - src: app
+          target: /app
+        - src: bin
+          target: /usr/local/sbin
+    run:
+      nginx: nginx -c /etc/nginx.conf
+      python: nanoinit python app.py
+    http:
+      expose: 8080
+      force_ssl: true
+      health_route: /health
+      routes:
+        - 'admin:'
+        - '^/admin/'
+    tcp:
+      - 5555:5555
+    udp:
+      - 9654:10000
+
+  env.local:
+    FOO: bar
+
+  env.staging:
+    BAZ: boa
+
+  env.production:
+    BLA: ber
+
+  env.whatever:
+    BOO: yah
+
+# ANOTHER SERVICE ("worker")
+worker:
+  dev:
+    image: nanobox/python-3-dev
+    run:
+      python: python app.py
+    aliases:
+      - nanoapp.local
+    dependencies:
+      - service1
+
+# A DATA SERVICE ("db")
+data.db:
+  image: nanobox/mysql
+
+  config:
+    foo: bar
+    ram: 512
+
+  data_dir: /var/db/mysql
+
+# A DATA SERVICE ("queue")
+data.queue:
+  image: nanobox/redis
+
+  config:
+    foo: bar
+    ram: 512
+
+  data_dir: /var/db/redis
