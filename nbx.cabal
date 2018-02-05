@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 82394170cf17cfe169d8e178e5e3e7095c0b0349a95afaa100ab0045b854a757
+-- hash: b987585fa9309c03b54f9b9f825db2684dab72e3a86253d810bfcbbb1f38dce5
 
 name:           nbx
 version:        0.1.0.0
@@ -52,7 +52,7 @@ library
   default-language: Haskell2010
 
 executable nbx
-  main-is: CommandLine.hs
+  main-is: Cli.hs
   hs-source-dirs:
       app
   default-extensions: NoImplicitPrelude OverloadedStrings
@@ -73,6 +73,6 @@ executable nbx
     , typed-process
     , universum
   other-modules:
-      CommandLine.Parse
+      Cli.Commands
       Paths_nbx
   default-language: Haskell2010

@@ -1,5 +1,5 @@
 module Nbx
-(Command(..) , execute)
+(push)
 where
 
 import qualified Nbx.Print as Print
@@ -7,42 +7,16 @@ import qualified Shellout
 import           Universum
 
 --------------------------------------------------------------------------------
--- COMMANDS
+-- NBX FUNCTIONS
 
--- | Commands that are recognized and parsed by the CLI
-data Command
-  = Main
-  | Init
-  | Push
-  | Status
-  | Setup
-  | Implode
-  | Version
+-- | > nbx push
+push :: IO ()
+push = do
+  -- here we might do things like check the config,
+  -- read .nbx.yml, etc.
 
---------------------------------------------------------------------------------
--- COMMAND EXECUTION
-
--- | execute a command
-execute :: Command -> IO ()
-execute cmd = do
-                            -- here we would do things like check the config,
-                            -- read .nbx.yml, etc.
-  let header = Print.header -- define a function to print headers
-  shell <- Shellout.new driver -- create a way to run external processes
-
-  case cmd of
-    Main    -> putTextLn "For help, run 'nbx -h'."
-    Init    -> putTextLn "INIT!"
-    Push    -> pushCmd shell header
-    Status  -> putTextLn "STATUS!"
-    Setup   -> putTextLn "SETUP!"
-    Implode -> putTextLn "IMPLODE!"
-    Version -> putTextLn "NBX version 0.0.1"
-
--- | run the push command
--- > nbx push
-pushCmd :: Shellout.Shell -> Print.Header -> IO ()
-pushCmd shell header = do
+  let header = Print.header     -- define a function to print headers
+  shell <- Shellout.new driver  -- create a way to run external processes
 
   header "Setting up concert"
 
@@ -59,7 +33,7 @@ pushCmd shell header = do
 --------------------------------------------------------------------------------
 -- SHELL DISPLAY DRIVER
 
--- -- | a shell driver that pretty-prints output from processes with a spinner
+-- | a shell driver that pretty-prints output from processes with a spinner
 driver :: Shellout.Driver Print.Task
 driver = Shellout.Driver
   { Shellout.initialState  = Print.createTask

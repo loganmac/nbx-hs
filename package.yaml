@@ -50,7 +50,7 @@ library:
 
 executables:
   nbx:
-    main:                CommandLine.hs
+    main:                Cli.hs
     source-dirs:         app
     ghc-options:
     - -threaded
