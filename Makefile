@@ -1,4 +1,4 @@
-.PHONY: run build ghcid
+.PHONY: run build clean ghci ghcid autocomplete
 
 run:
 	@stack install

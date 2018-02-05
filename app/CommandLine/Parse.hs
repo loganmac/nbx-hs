@@ -2,8 +2,9 @@
 -}
 module CommandLine.Parse where
 
-import           Nbx    (Command (..))
-import           Turtle (Parser, options, subcommand, (<|>))
+import           Nbx     (Command (..))
+import           Prelude
+import           Turtle  (Parser, options, subcommand, (<|>))
 
 
 --------------------------------------------------------------------------------

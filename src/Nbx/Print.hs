@@ -1,6 +1,5 @@
 {-| A print driver and some formatting functions.
 -}
-{-# LANGUAGE NoImplicitPrelude #-}
 module Nbx.Print where
 
 import           Universum
@@ -129,7 +128,7 @@ output task str = do
 handleNothing :: Task -> IO Task
 handleNothing task = do
   t <- spinner task
-  threadDelay $ 50 * 1000 -- 50 ms
+  threadDelay 1000 -- 1ms
   toSpinner
   pure t
 

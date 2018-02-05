@@ -1,11 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Nbx
 (Command(..) , execute)
 where
 
 import qualified Nbx.Print as Print
-import           Shell     (Shell)
-import qualified Shell
+import qualified Shellout
 import           Universum
 
 --------------------------------------------------------------------------------
@@ -30,7 +28,7 @@ execute cmd = do
                             -- here we would do things like check the config,
                             -- read .nbx.yml, etc.
   let header = Print.header -- define a function to print headers
-  shell <- Shell.new driver -- create a way to run external processes
+  shell <- Shellout.new driver -- create a way to run external processes
 
   case cmd of
     Main    -> putTextLn "For help, run 'nbx -h'."
@@ -43,7 +41,7 @@ execute cmd = do
 
 -- | run the push command
 -- > nbx push
-pushCmd :: Shell -> Print.Header -> IO ()
+pushCmd :: Shellout.Shell -> Print.Header -> IO ()
 pushCmd shell header = do
 
   header "Setting up concert"
@@ -61,32 +59,30 @@ pushCmd shell header = do
 --------------------------------------------------------------------------------
 -- SHELL DISPLAY DRIVER
 
--- | a shell driver that pretty-prints output from processes with a spinner
-driver :: Shell.Driver Print.Task
-driver = Shell.Driver
-  { Shell.initialState  = Print.createTask
-  , Shell.handleNothing = Print.handleNothing
-  , Shell.handleOut     = Print.handleOut
-  , Shell.handleErr     = Print.handleErr
-  , Shell.handleSuccess = Print.handleSuccess
-  , Shell.handleFailure = Print.handleFailure
+-- -- | a shell driver that pretty-prints output from processes with a spinner
+driver :: Shellout.Driver Print.Task
+driver = Shellout.Driver
+  { Shellout.initialState  = Print.createTask
+  , Shellout.handleNothing = Print.handleNothing
+  , Shellout.handleOut     = Print.handleOut
+  , Shellout.handleErr     = Print.handleErr
+  , Shellout.handleSuccess = Print.handleSuccess
+  , Shellout.handleFailure = Print.handleFailure
   }
 
 -- TODO: Alternate drivers
 
 -- | a windows display driver
--- windowsDriver :: Shell.Driver
--- windowsDriver = driver {Shell.spinner = Print.spinner Print.windowsSpinner}
+-- windowsDriver :: Shellout.Driver Print.Task
+-- windowsDriver = driver {Shellout.spinner = Print.spinner Print.windowsSpinner}
 
--- -- | a display driver that just logs everything out
--- verboseDriver :: Shell.Driver
--- verboseDriver = Shell.Driver
---   { Shell.spinnerFps    = 1
---   , Shell.toSpinner     = pure ()
---   , Shell.spinner       = \_pos _prompt -> pure ()
---   , Shell.sleepDuration = 1 * 1000 -- 1 ms
---   , Shell.handleOut     = putTextLn
---   , Shell.handleErr     = putTextLn
---   , Shell.handleSuccess = putTextLn
---   , Shell.handleFailure = \_task _buf -> pure ()
+-- | a display driver that just logs everything out
+-- verboseDriver :: Shellout.Driver Print.Task
+-- verboseDriver = Shellout.Driver
+--   { Shellout.initialState  = Print.createTask
+--   , Shellout.handleNothing = \task     -> threadDelay 1000 >> pure task
+--   , Shellout.handleOut     = \task txt -> putTextLn txt >> pure task
+--   , Shellout.handleErr     = \task txt -> putTextLn txt >> pure task
+--   , Shellout.handleSuccess = \_task    -> pure ()
+--   , Shellout.handleFailure = \task     -> putTextLn $ (Print.name task) <> " failed."
 --   }
