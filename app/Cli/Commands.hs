@@ -16,7 +16,6 @@ data Command
   | Status
   | Setup
   | Implode
-  | Version
 
 --------------------------------------------------------------------------------
 -- PARSING
@@ -35,7 +34,6 @@ parser =
   <|> pushCmd
   <|> setupCmd
   <|> implodeCmd
-  <|> versionCmd
 
 -- | parse a raw `nbx`
 mainCmd :: Parser Command
@@ -81,11 +79,3 @@ implodeCmd =
     "implode"
     "Delete NBX and all configuration"
     $ pure Implode
-
--- | parse `nbx version`
-versionCmd :: Parser Command
-versionCmd =
-  subcommand
-    "version"
-    "Display version info"
-    $ pure Version

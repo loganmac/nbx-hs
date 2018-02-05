@@ -25,17 +25,13 @@ default-extensions:
 
 dependencies:
 - ansi-terminal
-- async
 - base >= 4.7 && < 5
-- bytestring
 - pretty-terminal
 - regex-compat
 - shellout
-- stm
 - text
 - time
 - turtle
-- typed-process
 - universum
 
 ghc-options:
@@ -58,14 +54,3 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - nbx
-
-# tests:
-#   nbox-test:
-#     main:                Spec.hs
-#     source-dirs:         test
-#     ghc-options:
-#     - -threaded
-#     - -rtsopts
-#     - -with-rtsopts=-N
-#     dependencies:
-#     - nbx

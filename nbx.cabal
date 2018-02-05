@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b987585fa9309c03b54f9b9f825db2684dab72e3a86253d810bfcbbb1f38dce5
+-- hash: 6bcc8e4987355875ad1cab0a52781bffe8a5863d1ec2245395b78b47ca329c25
 
 name:           nbx
 version:        0.1.0.0
@@ -32,17 +32,13 @@ library
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs
   build-depends:
       ansi-terminal
-    , async
     , base >=4.7 && <5
-    , bytestring
     , pretty-terminal
     , regex-compat
     , shellout
-    , stm
     , text
     , time
     , turtle
-    , typed-process
     , universum
   exposed-modules:
       Nbx
@@ -59,18 +55,14 @@ executable nbx
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       ansi-terminal
-    , async
     , base >=4.7 && <5
-    , bytestring
     , nbx
     , pretty-terminal
     , regex-compat
     , shellout
-    , stm
     , text
     , time
     , turtle
-    , typed-process
     , universum
   other-modules:
       Cli.Commands

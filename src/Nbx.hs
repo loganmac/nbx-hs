@@ -46,10 +46,6 @@ driver = Shellout.Driver
 
 -- TODO: Alternate drivers
 
--- | a windows display driver
--- windowsDriver :: Shellout.Driver Print.Task
--- windowsDriver = driver {Shellout.spinner = Print.spinner Print.windowsSpinner}
-
 -- | a display driver that just logs everything out
 -- verboseDriver :: Shellout.Driver Print.Task
 -- verboseDriver = Shellout.Driver

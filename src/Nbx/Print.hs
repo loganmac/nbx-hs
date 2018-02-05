@@ -119,10 +119,11 @@ createTask taskName =
 output :: Task -> Text -> IO Task
 output task str = do
   t <- spinner task
+  let task' = t { stack = str : (stack t)}
   Term.cursorUpLine 1
   clearPrint $ taskOutputIndent <> str
   toSpinner
-  pure t
+  pure task'
 
 -- | Updates the spinner then sleeps
 handleNothing :: Task -> IO Task
@@ -159,10 +160,9 @@ handleFailure task = do
   clearPrint "" -- explicitly to clear the line
 
   forM_ (reverse $ stack task) $
-    \x -> clearPrint $ taskIndent <> styleStackTrace x
+    \x -> clearPrint $ taskIndent <> x
   clearPrint "" -- explicitly to clear the line
   where
-    styleStackTrace = style Normal . color Red
     styledErrorHeader =
       style Bold . style Reverse . color Red
       $ "Error executing task '" <> name task <> "':"
