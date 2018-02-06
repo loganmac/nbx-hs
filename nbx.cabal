@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 71d677eccb123e0ac9666cda95015100b10271974d5d35e00afd2c242b669195
+-- hash: dd392df8d6d6fa4106ad15d231304ab65844ce36f76c062c6fad145b7c4b82a4
 
 name:           nbx
 version:        0.1.0.0
@@ -28,7 +28,7 @@ source-repository head
 library
   hs-source-dirs:
       src
-  default-extensions: NoImplicitPrelude OverloadedStrings
+  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs
   build-depends:
       aeson
@@ -57,7 +57,7 @@ executable nbx
   main-is: Cli.hs
   hs-source-dirs:
       app
-  default-extensions: NoImplicitPrelude OverloadedStrings
+  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson

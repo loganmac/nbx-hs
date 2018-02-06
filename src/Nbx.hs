@@ -1,10 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module Nbx
 (readConfig, push)
 where
 
 import qualified Data.Yaml.Config as YC
-import           Nbx.Config       as Config
+import qualified Nbx.Config       as Config
 import qualified Nbx.Print        as Print
 import qualified Shellout
 -- import qualified Text.Show.Pretty as P
@@ -17,9 +16,9 @@ readConfig :: IO ()
 readConfig = do
   -- here we might do things like check the config,
   -- read .nbx.yml, etc.
-  (settings::NbxFile) <- YC.loadYamlSettings ["./nbx.yml"] [] YC.ignoreEnv
-  let svcs = Config.nbxFileServices settings
-  for_ svcs $ \service -> print $ Config.serviceName service
+  settings <- YC.loadYamlSettings ["./nbx.yml"] [] YC.ignoreEnv
+  let services = Config.services settings
+  for_ services $ \service -> putTextLn $ Config.name (service::Config.Service)
   pure ()
 
 -- | > nbx push
