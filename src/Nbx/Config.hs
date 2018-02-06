@@ -1,70 +1,115 @@
-{-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
 module Nbx.Config where
 
 import           Prelude
 
-import           Data.Aeson   (FromJSON (..), ToJSON (..))
-import           Data.Text    (Text)
-import           GHC.Generics (Generic (..))
+import           Data.Aeson
+import           Data.Aeson.Types (Parser)
+import qualified Data.Text        as T
+import           Data.Typeable    (Proxy (..), Typeable, typeRep)
+import           GHC.Generics     (Generic (..))
+import           GHC.Generics     (Rep)
 
 data NbxFile = NbxFile
   { nbxFileConfig   :: Maybe Config
   , nbxFileServices :: [Service]
-  , nbxFileDatums   :: [Datum]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  , nbxFileDatums   :: Maybe [Datum]
+  } deriving (Generic, Show)
 
 data Config = Config
   { configRemotes :: [Remote]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  } deriving (Generic, Show)
 
 data Remote = Remote
-  { remoteName     :: Text
-  , remoteEnv      :: Text
-  , remotePath     :: Text
-  , remoteProvider :: Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { remoteName     :: T.Text
+  , remoteEnv      :: T.Text
+  , remotePath     :: T.Text
+  , remoteProvider :: T.Text
+  } deriving (Generic, Show)
 
 data Service = Service
-  { serviceName :: Text
+  { serviceName :: T.Text
   , serviceLive :: Maybe Live
   , serviceDev  :: Maybe Dev
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  } deriving (Generic, Show)
 
 data Dev = Dev
-  { devImage        :: Text
+  { devImage        :: T.Text
   , devContainers   :: Maybe [Container]
-  , devAliases      :: Maybe [Text]
-  , devDependencies :: Maybe [Text]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  , devAliases      :: Maybe [T.Text]
+  , devDependencies :: Maybe [T.Text]
+  } deriving (Generic, Show)
 
 data Live = Live
-  { liveImage        :: Text
+  { liveImage        :: T.Text
   , liveBuild        :: Maybe Build
   , liveContainers   :: Maybe [Container]
-  , liveDependencies :: Maybe [Text]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  , liveDependencies :: Maybe [T.Text]
+  } deriving (Generic, Show)
 
 data Container = Container
-  { containerName    :: Text
-  , containerCommand :: Text
-  , containerImage   :: Maybe Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { containerName    :: T.Text
+  , containerCommand :: T.Text
+  , containerImage   :: Maybe T.Text
+  } deriving (Generic, Show)
 
 data Build = Build
-  { buildImage :: Text
-  , buildSteps :: [Text]
+  { buildImage :: T.Text
+  , buildSteps :: [T.Text]
   , buildCopy  :: [Copy]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  } deriving (Generic, Show)
 
 data Copy = Copy
-  { copyFrom :: Text
-  , copyTo   :: Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { copyFrom :: T.Text
+  , copyTo   :: T.Text
+  } deriving (Generic, Show)
 
 data Datum = Datum
-  { datumName  :: Text
-  , datumImage :: Text
-  , datumDir   :: Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { datumName  :: T.Text
+  , datumImage :: T.Text
+  , datumDir   :: T.Text
+  } deriving (Generic, Show)
+
+instance FromJSON NbxFile where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Config where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Remote where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Service where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Dev where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Live where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Container where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Build where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Copy where
+  parseJSON = parseWithPrefix
+
+instance FromJSON Datum where
+  parseJSON = parseWithPrefix
+
+-- | Aeson serializer to generically format the given record based on its type
+-- information.
+parseWithPrefix :: forall a. (GFromJSON Zero (Rep a), Generic a, Typeable a) => Value -> Parser a
+parseWithPrefix = (genericParseJSON . optStripPrefix $ Proxy @a)
+
+optStripPrefix :: forall proxy a. Typeable a => proxy a -> Options
+optStripPrefix _ = defaultOptions {fieldLabelModifier = stripPrefix}
+  where stripPrefix = camelTo2 '_' . (drop . length . show $ typeRep $ Proxy @a)

@@ -1,14 +1,11 @@
-{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
 module Nbx
 (readConfig, push)
 where
 
-import           Data.Generics.Product (getField)
-import qualified Data.Yaml.Config      as YC
-import           Nbx.Config            as Config
-import qualified Nbx.Print             as Print
+import qualified Data.Yaml.Config as YC
+import           Nbx.Config       as Config
+import qualified Nbx.Print        as Print
 import qualified Shellout
 -- import qualified Text.Show.Pretty as P
 import           Universum
@@ -21,8 +18,8 @@ readConfig = do
   -- here we might do things like check the config,
   -- read .nbx.yml, etc.
   (settings::NbxFile) <- YC.loadYamlSettings ["./nbx.yml"] [] YC.ignoreEnv
-  let services = Config.nbxFileServices settings
-  for_ services $ \service -> print $ getField @"serviceName" service
+  let svcs = Config.nbxFileServices settings
+  for_ svcs $ \service -> print $ Config.serviceName service
   pure ()
 
 -- | > nbx push
