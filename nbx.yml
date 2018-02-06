@@ -3,15 +3,34 @@ config:
     - name: prod
       env: production
       path: team/group/app
-      type: nbx
+      provider: nbx
     - name: staging
       env: staging
       path: team/group/app
-      type: nbx
+      provider: nbx
     - name: storage
       env: storage
       path: dockerhub/user
-      type: docker
+      provider: docker
+
+datums:
+  - name: db
+    image: nanobox/mysql
+
+    config:
+      foo: bar
+      ram: 512
+
+    dir: /var/db/mysql
+
+  - name: queue
+    image: nanobox/redis
+
+    config:
+      foo: bar
+      ram: 512
+
+    dir: /var/db/redis
 
 services:
   - name: web
@@ -47,8 +66,8 @@ services:
           command: nanoinit python app.py
       http:
         expose: 8080
-        force_ssl: true
-        health_route: /health
+        ssl: true
+        health: /health
         routes:
           - 'admin:'
           - '^/admin/'
@@ -80,22 +99,3 @@ services:
         - nanoapp.local
       dependencies:
         - service1
-
-data:
-  - name: db
-    image: nanobox/mysql
-
-    config:
-      foo: bar
-      ram: 512
-
-    data_dir: /var/db/mysql
-
-  - name: queue
-    image: nanobox/redis
-
-    config:
-      foo: bar
-      ram: 512
-
-    data_dir: /var/db/redis

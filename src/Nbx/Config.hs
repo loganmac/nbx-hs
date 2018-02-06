@@ -1,96 +1,70 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 module Nbx.Config where
 
-import           Data.Aeson          (FromJSON (..), withObject)
-import qualified Data.Aeson.Types    as A
-import qualified Data.HashMap.Strict as HM
-import           Data.Traversable    (for)
-import           GHC.Generics
-import           Universum
+import           Prelude
+
+import           Data.Aeson   (FromJSON (..), ToJSON (..))
+import           Data.Text    (Text)
+import           GHC.Generics (Generic (..))
 
 data NbxFile = NbxFile
-  { config   :: Maybe Config
-  , services :: [ServiceConfig]
-  } deriving (Generic, Show)
+  { nbxFileConfig   :: Maybe Config
+  , nbxFileServices :: [Service]
+  , nbxFileDatums   :: [Datum]
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
 data Config = Config
-  { remotes :: [RemoteConfig]
-  } deriving (Generic, Show)
+  { configRemotes :: [Remote]
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-data RemoteConfig = RemoteConfig
-  { remoteName :: Text
-  , remotePath :: Text
-  } deriving (Generic, Show)
+data Remote = Remote
+  { remoteName     :: Text
+  , remoteEnv      :: Text
+  , remotePath     :: Text
+  , remoteProvider :: Text
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-data ServiceConfig = ServiceConfig
+data Service = Service
   { serviceName :: Text
-  , serviceLive :: Maybe LiveConfig
-  } deriving (Generic, Show)
+  , serviceLive :: Maybe Live
+  , serviceDev  :: Maybe Dev
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-data LiveConfig = LiveConfig
-  { liveImage :: Text
-  , liveBuild :: Maybe BuildConfig
-  , liveRun   :: Maybe [RunConfig]
-  } deriving (Generic, Show)
+data Dev = Dev
+  { devImage        :: Text
+  , devContainers   :: Maybe [Container]
+  , devAliases      :: Maybe [Text]
+  , devDependencies :: Maybe [Text]
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-data RunConfig = RunConfig
-  { runName    :: Text
-  , runCommand :: Text
-  } deriving (Generic, Show)
+data Live = Live
+  { liveImage        :: Text
+  , liveBuild        :: Maybe Build
+  , liveContainers   :: Maybe [Container]
+  , liveDependencies :: Maybe [Text]
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-data BuildConfig = BuildConfig
+data Container = Container
+  { containerName    :: Text
+  , containerCommand :: Text
+  , containerImage   :: Maybe Text
+  } deriving (ToJSON, FromJSON, Generic, Show)
+
+data Build = Build
   { buildImage :: Text
   , buildSteps :: [Text]
-  , buildCopy  :: [CopyConfig]
-  } deriving (Generic, Show)
+  , buildCopy  :: [Copy]
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-data CopyConfig = CopyConfig
+data Copy = Copy
   { copyFrom :: Text
   , copyTo   :: Text
-  } deriving (Generic, Show)
+  } deriving (ToJSON, FromJSON, Generic, Show)
 
-instance FromJSON NbxFile where
-  parseJSON = withObject "nbx.yml" $ \obj ->
-    NbxFile
-      <$> A.parseFieldMaybe obj "config"
-      <*> A.explicitParseField parseServices obj "service"
-    where
-      parseServices = withObject "service" $ \obj ->
-        for (HM.toList obj) $ \(name, svcBody) -> do
-          body <- parseJSON svcBody
-          let live = A.parseFieldMaybe body "live"
-          ServiceConfig <$> pure name <*> live
-
-
-instance FromJSON Config where
-  parseJSON = withObject "config" $ \obj ->
-    Config
-      <$> A.explicitParseField parseRemotes obj "remotes"
-    where
-      parseRemotes = withObject "remote" $ \obj->
-        for (HM.toList obj) $ \(name, path) ->
-          RemoteConfig <$> pure name <*> parseJSON path
-
-instance FromJSON LiveConfig where
-  parseJSON = withObject "live" $ \obj ->
-    LiveConfig
-      <$> A.parseField obj "image"
-      <*> A.parseFieldMaybe obj "build"
-      <*> A.explicitParseFieldMaybe parseRun obj "run"
-    where
-      parseRun = withObject "run" $ \obj ->
-        for (HM.toList obj) $ \(name, cmd) ->
-          RunConfig <$> pure name <*> parseJSON cmd
-
-instance FromJSON BuildConfig where
-  parseJSON = withObject "build" $ \obj ->
-    BuildConfig
-      <$> A.parseField obj "image"
-      <*> A.parseField obj "steps"
-      <*> A.parseField obj "copy"
-
-instance FromJSON CopyConfig where
-  parseJSON = withObject "copy" $ \obj ->
-    CopyConfig
-      <$> A.parseField obj "from"
-      <*> A.parseField obj "to"
+data Datum = Datum
+  { datumName  :: Text
+  , datumImage :: Text
+  , datumDir   :: Text
+  } deriving (ToJSON, FromJSON, Generic, Show)
