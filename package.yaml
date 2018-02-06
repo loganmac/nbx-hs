@@ -24,8 +24,10 @@ default-extensions:
 - OverloadedStrings
 
 dependencies:
+- aeson
 - ansi-terminal
 - base >= 4.7 && < 5
+- pretty-show
 - pretty-terminal
 - regex-compat
 - shellout
@@ -33,6 +35,8 @@ dependencies:
 - time
 - turtle
 - universum
+- unordered-containers
+- yaml
 
 ghc-options:
   - -Wall

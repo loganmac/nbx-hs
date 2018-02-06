@@ -1,20 +1,29 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Nbx
-(push)
+(readConfig, push)
 where
 
-import qualified Nbx.Print as Print
+import qualified Data.Yaml.Config as YC
+import           Nbx.Config       as Config
+import qualified Nbx.Print        as Print
 import qualified Shellout
+import qualified Text.Show.Pretty as P
 import           Universum
 
 --------------------------------------------------------------------------------
 -- NBX FUNCTIONS
 
+readConfig :: IO ()
+readConfig = do
+  -- here we might do things like check the config,
+  -- read .nbx.yml, etc.
+  (settings::NbxFile) <- YC.loadYamlSettings ["./nbx.yml"] [] YC.ignoreEnv
+  P.pPrint settings
+  pure ()
+
 -- | > nbx push
 push :: IO ()
 push = do
-  -- here we might do things like check the config,
-  -- read .nbx.yml, etc.
-
   let header = Print.header     -- define a function to print headers
   shell <- Shellout.new driver  -- create a way to run external processes
 

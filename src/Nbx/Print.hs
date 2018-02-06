@@ -90,6 +90,7 @@ toSpinner = do
 
 spinner :: Task -> IO Task
 spinner task = do
+  -- TODO: parameterize the spinner theme
   printSpinner unixSpinner (spinPos task) (name task)
   now <- getPOSIXTime
   let lastSpinTime = lastSpin task
@@ -119,7 +120,7 @@ createTask taskName =
 output :: Task -> Text -> IO Task
 output task str = do
   t <- spinner task
-  let task' = t { stack = str : (stack t)}
+  let task' = t { stack = str : stack t}
   Term.cursorUpLine 1
   clearPrint $ taskOutputIndent <> str
   toSpinner

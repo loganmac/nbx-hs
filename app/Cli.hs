@@ -6,6 +6,7 @@ import           Universum
 
 main :: IO ()
 main = do
+  Nbx.readConfig
   cmd <- Commands.parse
   case cmd of
     Commands.Main    -> putTextLn "NBX version 0.0.1\nFor help, run 'nbx -h'."

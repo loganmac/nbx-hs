@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6bcc8e4987355875ad1cab0a52781bffe8a5863d1ec2245395b78b47ca329c25
+-- hash: 723d60c2ab0b71390ec7bacf4a9036b7330645bf8bf288ab807321061f7a050c
 
 name:           nbx
 version:        0.1.0.0
@@ -31,8 +31,10 @@ library
   default-extensions: NoImplicitPrelude OverloadedStrings
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs
   build-depends:
-      ansi-terminal
+      aeson
+    , ansi-terminal
     , base >=4.7 && <5
+    , pretty-show
     , pretty-terminal
     , regex-compat
     , shellout
@@ -40,8 +42,11 @@ library
     , time
     , turtle
     , universum
+    , unordered-containers
+    , yaml
   exposed-modules:
       Nbx
+      Nbx.Config
       Nbx.Print
   other-modules:
       Paths_nbx
@@ -54,9 +59,11 @@ executable nbx
   default-extensions: NoImplicitPrelude OverloadedStrings
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      ansi-terminal
+      aeson
+    , ansi-terminal
     , base >=4.7 && <5
     , nbx
+    , pretty-show
     , pretty-terminal
     , regex-compat
     , shellout
@@ -64,6 +71,8 @@ executable nbx
     , time
     , turtle
     , universum
+    , unordered-containers
+    , yaml
   other-modules:
       Cli.Commands
       Paths_nbx

@@ -1,81 +1,101 @@
-web:
-  dev:
-    image: nanobox/python-3-dev
-    run:
-      nginx:  nginx -c /etc/nginx.conf
-      python: python app.py
-    aliases:
-      - nanoapp.local
-    dependencies:
-      - service1
-      - service2
-      - s3
+config:
+  remotes:
+    - name: prod
+      env: production
+      path: team/group/app
+      type: nbx
+    - name: staging
+      env: staging
+      path: team/group/app
+      type: nbx
+    - name: storage
+      env: storage
+      path: dockerhub/user
+      type: docker
 
-  live:
-    image: nanobox/python-3
-    build:
+services:
+  - name: web
+    dev:
       image: nanobox/python-3-dev
-      steps:
-        - python compile.py
-      dirs:
-        - src: app
-          target: /app
-        - src: bin
-          target: /usr/local/sbin
-    run:
-      nginx: nginx -c /etc/nginx.conf
-      python: nanoinit python app.py
-    http:
-      expose: 8080
-      force_ssl: true
-      health_route: /health
-      routes:
-        - 'admin:'
-        - '^/admin/'
-    tcp:
-      - 5555:5555
-    udp:
-      - 9654:10000
+      containers:
+        - name: nginx
+          command: nginx -c /etc/nginx.conf
+        - name: python
+          command: python app.py
+      aliases:
+        - nanoapp.local
+      dependencies:
+        - service1
+        - service2
+        - s3
 
-  env.local:
-    FOO: bar
+    live:
+      image: nanobox/python-3
+      build:
+        image: nanobox/python-3-dev
+        steps:
+          - python compile.py
+        copy:
+          - from: app
+            to: /app
+          - from: bin
+            to: /usr/local/sbin
+      containers:
+        - name: nginx
+          command: nginx -c /etc/nginx.conf
+        - name: python
+          command: nanoinit python app.py
+      http:
+        expose: 8080
+        force_ssl: true
+        health_route: /health
+        routes:
+          - 'admin:'
+          - '^/admin/'
+      tcp:
+        - 5555:5555
+      udp:
+        - 9654:10000
 
-  env.staging:
-    BAZ: boa
+    env:
+      - name: local
+        vars:
+          FOO: bar
+      - name: staging
+        vars:
+          BAZ: boa
+      - name: production
+        vars:
+          BLA: ber
+      - name: whatever
+        vars:
+          BOO: yah
 
-  env.production:
-    BLA: ber
+  - name: worker
+    dev:
+      image: nanobox/python-3-dev
+      run:
+        python: python app.py
+      aliases:
+        - nanoapp.local
+      dependencies:
+        - service1
 
-  env.whatever:
-    BOO: yah
+data:
+  - name: db
+    image: nanobox/mysql
 
-# ANOTHER SERVICE ("worker")
-worker:
-  dev:
-    image: nanobox/python-3-dev
-    run:
-      python: python app.py
-    aliases:
-      - nanoapp.local
-    dependencies:
-      - service1
+    config:
+      foo: bar
+      ram: 512
 
-# A DATA SERVICE ("db")
-data.db:
-  image: nanobox/mysql
+    data_dir: /var/db/mysql
 
-  config:
-    foo: bar
-    ram: 512
+  - name: queue
+    image: nanobox/redis
 
-  data_dir: /var/db/mysql
+    config:
+      foo: bar
+      ram: 512
 
-# A DATA SERVICE ("queue")
-data.queue:
-  image: nanobox/redis
-
-  config:
-    foo: bar
-    ram: 512
-
-  data_dir: /var/db/redis
+    data_dir: /var/db/redis
