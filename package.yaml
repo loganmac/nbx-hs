@@ -29,7 +29,6 @@ dependencies:
 - aeson
 - ansi-terminal
 - base >= 4.7 && < 5
-- generic-lens
 - pretty-show
 - pretty-terminal
 - regex-compat
@@ -40,7 +39,6 @@ dependencies:
 - universum
 - unordered-containers
 - yaml
-- yaml-config
 
 ghc-options:
   - -Wall
