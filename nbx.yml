@@ -32,7 +32,7 @@ datums:
 
     dir: /var/db/redis
 
-services:
+sservices:
   - name: web
     dev:
       image: nanobox/python-3-dev

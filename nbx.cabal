@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: dd392df8d6d6fa4106ad15d231304ab65844ce36f76c062c6fad145b7c4b82a4
+-- hash: 83bc07efadf138fe99c2e75dbcb09bff94e1b50daaa7613afc5e04099cbee0b8
 
 name:           nbx
 version:        0.1.0.0
@@ -45,6 +45,7 @@ library
     , universum
     , unordered-containers
     , yaml
+    , yaml-config
   exposed-modules:
       Nbx
       Nbx.Config
@@ -75,6 +76,7 @@ executable nbx
     , universum
     , unordered-containers
     , yaml
+    , yaml-config
   other-modules:
       Cli.Commands
       Paths_nbx
