@@ -2,11 +2,12 @@ module Nbx
 (readConfig, push)
 where
 
-import qualified Data.Yaml  as Yaml
-import qualified Nbx.Config as Config
-import qualified Nbx.Print  as Print
+import qualified Data.ByteString       as B
+import qualified Data.Yaml.Combinators as Yaml
+import qualified Nbx.Config            as Config
+import qualified Nbx.Print             as Print
 import qualified Shellout
--- import qualified Text.Show.Pretty as P
+import qualified Text.Show.Pretty      as P
 import           Universum
 
 --------------------------------------------------------------------------------
@@ -17,14 +18,15 @@ readConfig = do
   -- here we might do things like check the config,
   -- read .nbx.yml, etc.
 
-  parsed <- Yaml.decodeFileEither "./nbx.yml"
-  case parsed of
-    Left err -> do
-      putStrLn $ Yaml.prettyPrintParseException err
-      exitFailure
-    Right settings ->
-      let services = Config.nbxFileServices settings in
-      for_ services $ \service -> putTextLn $ Config.serviceName service
+  file <- B.readFile "./nbx.yml"
+  either putStrLn P.pPrint $ Yaml.parse Config.nbxFileParser file
+  -- case parsed of
+  --   Left err -> do
+  --     putStrLn $ Yaml.prettyPrintParseException err
+  --     exitFailure
+  --   Right settings ->
+  --     let services = Config.nbxFileServices settings in
+  --     for_ services $ \service -> putTextLn $ Config.serviceName service
 
 -- | > nbx push
 push :: IO ()

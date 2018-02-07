@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 301623d175a1d1ce8e9737cb388b0ddd8f938aa39c325c3082936c71928194f1
+-- hash: 3650c6919c86b7d1238abf0adab0e297e8046a6cbb70d81ba877ab7ab42a724a
 
 name:           nbx
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       aeson
     , ansi-terminal
     , base >=4.7 && <5
+    , bytestring
     , pretty-show
     , pretty-terminal
     , regex-compat
@@ -43,7 +44,9 @@ library
     , turtle
     , universum
     , unordered-containers
+    , vector
     , yaml
+    , yaml-combinators
   exposed-modules:
       Nbx
       Nbx.Config
@@ -62,6 +65,7 @@ executable nbx
       aeson
     , ansi-terminal
     , base >=4.7 && <5
+    , bytestring
     , nbx
     , pretty-show
     , pretty-terminal
@@ -72,7 +76,9 @@ executable nbx
     , turtle
     , universum
     , unordered-containers
+    , vector
     , yaml
+    , yaml-combinators
   other-modules:
       Cli.Commands
       Paths_nbx

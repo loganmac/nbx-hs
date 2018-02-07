@@ -1,4 +1,4 @@
-configuration:
+config:
   remotes:
     - name: prod
       env: production
@@ -13,22 +13,23 @@ configuration:
       path: dockerhub/user
       provider: docker
 
-datums:
+data:
   - name: db
     image: nanobox/mysql
 
-    config:
-      foo: bar
-      ram: 512
+    # TODO:
+    # config:
+    #   foo: bar
+    #   ram: 512
 
     dir: /var/db/mysql
 
   - name: queue
     image: nanobox/redis
 
-    config:
-      foo: bar
-      ram: 512
+    # config:
+    #   foo: bar
+    #   ram: 512
 
     dir: /var/db/redis
 
@@ -77,24 +78,26 @@ services:
         - 9654:10000
 
     env:
+    # TODO: VARS!
       - name: local
-        vars:
-          FOO: bar
+        # vars:
+        #   FOO: bar
       - name: staging
-        vars:
-          BAZ: boa
+        # vars:
+        #   BAZ: boa
       - name: production
-        vars:
-          BLA: ber
+        # vars:
+        #   BLA: ber
       - name: whatever
-        vars:
-          BOO: yah
+        # vars:
+        #   BOO: yah
 
   - name: worker
     dev:
       image: nanobox/python-3-dev
-      run:
-        python: python app.py
+      containers:
+        - name: python
+          command: python app.py
       aliases:
         - nanoapp.local
       dependencies:

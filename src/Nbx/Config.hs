@@ -1,17 +1,19 @@
 module Nbx.Config where
 
-import           Universum  hiding (Container)
+import           Universum             hiding (Container, bool)
 
-import           Data.Aeson
+-- import           Data.HashMap.Strict   (HashMap)
+import           Data.Vector           (Vector)
+import           Data.Yaml.Combinators
 
 data NbxFile = NbxFile
   { nbxFileConfig   :: Maybe Config
-  , nbxFileServices :: [Service]
-  , nbxFileDatums   :: Maybe [Datum]
+  , nbxFileServices :: (Vector Service)
+  , nbxFileDatums   :: Maybe (Vector Datum)
   } deriving (Show)
 
 data Config = Config
-  { configRemotes :: [Remote]
+  { configRemotes :: (Vector Remote)
   } deriving (Show)
 
 data Remote = Remote
@@ -23,22 +25,38 @@ data Remote = Remote
 
 data Service = Service
   { serviceName :: Text
-  , serviceLive :: Maybe Live
   , serviceDev  :: Maybe Dev
+  , serviceLive :: Maybe Live
+  , serviceEnv  :: Maybe (Vector Env)
   } deriving (Show)
 
 data Dev = Dev
   { devImage        :: Text
-  , devContainers   :: Maybe [Container]
-  , devAliases      :: Maybe [Text]
-  , devDependencies :: Maybe [Text]
+  , devContainers   :: Maybe (Vector Container)
+  , devAliases      :: Maybe (Vector Text)
+  , devDependencies :: Maybe (Vector Text)
   } deriving (Show)
 
 data Live = Live
   { liveImage        :: Text
   , liveBuild        :: Maybe Build
-  , liveContainers   :: Maybe [Container]
-  , liveDependencies :: Maybe [Text]
+  , liveContainers   :: Maybe (Vector Container)
+  , liveDependencies :: Maybe (Vector Text)
+  , liveHttp         :: Maybe Http
+  , liveTcp          :: Maybe (Vector Text)
+  , liveUdp          :: Maybe (Vector Text)
+  } deriving (Show)
+
+data Env = Env
+  { envName :: Text
+  -- TODO : , envVars :: HashMap Text Text
+  } deriving (Show)
+
+data Http = Http
+  { httpExpose :: Maybe Text
+  , httpSsl    :: Maybe Bool
+  , httpHealth :: Maybe Text
+  , httpRoutes :: Maybe (Vector Text)
   } deriving (Show)
 
 data Container = Container
@@ -49,8 +67,8 @@ data Container = Container
 
 data Build = Build
   { buildImage :: Text
-  , buildSteps :: [Text]
-  , buildCopy  :: [Copy]
+  , buildSteps :: (Vector Text)
+  , buildCopy  :: (Vector Copy)
   } deriving (Show)
 
 data Copy = Copy
@@ -64,72 +82,90 @@ data Datum = Datum
   , datumDir   :: Text
   } deriving (Show)
 
-instance FromJSON NbxFile where
-  parseJSON = withObject "nbxFile" $ \o ->
-    NbxFile
-    <$> o .:? "config"
-    <*> o .: "services"
-    <*> o .:? "data"
+nbxFileParser :: Parser NbxFile
+nbxFileParser =
+    object $ NbxFile
+    <$> optField "config" configParser
+    <*> field "services" (array serviceParser)
+    <*> optField "data" (array datumParser)
 
-instance FromJSON Config where
-  parseJSON = withObject "config" $ \o ->
-    Config
-    <$> o.: "remotes"
+configParser :: Parser Config
+configParser =
+    object $ Config
+    <$> field "remotes" (array remoteParser)
 
-instance FromJSON Remote where
-  parseJSON = withObject "remote" $ \o ->
-    Remote
-    <$> o .: "name"
-    <*> o .: "env"
-    <*> o .: "path"
-    <*> o .: "provider"
+remoteParser :: Parser Remote
+remoteParser =
+    object $ Remote
+    <$> field "name" string
+    <*> field "env" string
+    <*> field "path" string
+    <*> field "provider" string
 
-instance FromJSON Service where
-  parseJSON = withObject "service" $ \o ->
-    Service
-    <$> o .: "name"
-    <*> o .:? "live"
-    <*> o .:? "dev"
+serviceParser :: Parser Service
+serviceParser =
+    object $ Service
+    <$> field "name" string
+    <*> optField "dev" devParser
+    <*> optField "live" liveParser
+    <*> optField "env" (array envParser)
 
-instance FromJSON Dev where
-  parseJSON = withObject "dev" $ \o ->
-    Dev
-    <$> o .: "image"
-    <*> o .:? "containers"
-    <*> o .:? "aliases"
-    <*> o .:? "dependencies"
+devParser :: Parser Dev
+devParser =
+    object $ Dev
+    <$> field "image" string
+    <*> optField "containers" (array containerParser)
+    <*> optField "aliases" (array string)
+    <*> optField "dependencies" (array string)
 
-instance FromJSON Live where
-  parseJSON = withObject "live" $ \o ->
-    Live
-    <$> o .: "image"
-    <*> o .:? "build"
-    <*> o .:? "containers"
-    <*> o .:? "dependencies"
+liveParser :: Parser Live
+liveParser =
+    object $ Live
+    <$> field "image" string
+    <*> optField "build" buildParser
+    <*> optField "containers" (array containerParser)
+    <*> optField "dependencies" (array string)
+    <*> optField "http" httpParser
+    <*> optField "tcp" (array string)
+    <*> optField "udp" (array string)
 
-instance FromJSON Container where
-  parseJSON = withObject "container" $ \o ->
-    Container
-    <$> o .: "name"
-    <*> o .: "command"
-    <*> o .:? "image"
+envParser :: Parser Env
+envParser =
+  object $ Env
+  <$> field "name" string
+  -- TODO : <*> field "vars" object
 
-instance FromJSON Build where
-  parseJSON = withObject "build" $ \o ->
-    Build
-    <$> o .: "image"
-    <*> o .: "steps"
-    <*> o .: "copy"
+httpParser :: Parser Http
+httpParser =
+  object $ Http
+  <$> optField "expose" string
+  <*> optField "ssl" bool
+  <*> optField "health" string
+  <*> optField "routes" (array string)
 
-instance FromJSON Copy where
-  parseJSON = withObject "copy" $ \o ->
-    Copy
-    <$> o .: "from"
-    <*> o .: "to"
+containerParser :: Parser Container
+containerParser =
+    object $ Container
+    <$> field "name" string
+    <*> field "command" string
+    <*> optField "image" string
 
-instance FromJSON Datum where
-  parseJSON = withObject "data" $ \o ->
-    Datum
-    <$> o .: "name"
-    <*> o .: "image"
-    <*> o .: "dir"
+buildParser :: Parser Build
+buildParser =
+    object $ Build
+    <$> field "image" string
+    <*> field "steps" (array string)
+    <*> field "copy" (array copyParser)
+
+copyParser :: Parser Copy
+copyParser =
+    object $ Copy
+    <$> field "from" string
+    <*> field "to" string
+
+datumParser :: Parser Datum
+datumParser =
+    object $ Datum
+    <$> field "name" string
+    <*> field "image" string
+    <*> field "dir" string
