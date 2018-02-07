@@ -24,6 +24,8 @@ default-extensions:
 - OverloadedStrings
 - DuplicateRecordFields
 - ScopedTypeVariables
+- DeriveGeneric
+- DeriveAnyClass
 
 dependencies:
 - aeson

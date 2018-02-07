@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 83bc07efadf138fe99c2e75dbcb09bff94e1b50daaa7613afc5e04099cbee0b8
+-- hash: 301623d175a1d1ce8e9737cb388b0ddd8f938aa39c325c3082936c71928194f1
 
 name:           nbx
 version:        0.1.0.0
@@ -28,13 +28,12 @@ source-repository head
 library
   hs-source-dirs:
       src
-  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables
+  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables DeriveGeneric DeriveAnyClass
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs
   build-depends:
       aeson
     , ansi-terminal
     , base >=4.7 && <5
-    , generic-lens
     , pretty-show
     , pretty-terminal
     , regex-compat
@@ -45,7 +44,6 @@ library
     , universum
     , unordered-containers
     , yaml
-    , yaml-config
   exposed-modules:
       Nbx
       Nbx.Config
@@ -58,13 +56,12 @@ executable nbx
   main-is: Cli.hs
   hs-source-dirs:
       app
-  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables
+  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables DeriveGeneric DeriveAnyClass
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , ansi-terminal
     , base >=4.7 && <5
-    , generic-lens
     , nbx
     , pretty-show
     , pretty-terminal
@@ -76,7 +73,6 @@ executable nbx
     , universum
     , unordered-containers
     , yaml
-    , yaml-config
   other-modules:
       Cli.Commands
       Paths_nbx

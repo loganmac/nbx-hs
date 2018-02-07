@@ -16,19 +16,15 @@ readConfig :: IO ()
 readConfig = do
   -- here we might do things like check the config,
   -- read .nbx.yml, etc.
-  validated <- Config.validateYaml "./nbx.yml"
-  case validated of
-    Nothing -> pure ()
-    Just s  -> putTextLn s >> exitFailure
 
   parsed <- Yaml.decodeFileEither "./nbx.yml"
   case parsed of
     Left err -> do
-      putStrLn $ Config.parseError err
+      putStrLn $ Yaml.prettyPrintParseException err
       exitFailure
     Right settings ->
-      let services = Config.services settings in
-      for_ services $ \service -> putTextLn $ Config.name (service::Config.Service)
+      let services = Config.nbxFileServices settings in
+      for_ services $ \service -> putTextLn $ Config.serviceName service
 
 -- | > nbx push
 push :: IO ()

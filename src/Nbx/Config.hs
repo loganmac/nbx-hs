@@ -1,129 +1,135 @@
-{-# LANGUAGE DeriveAnyClass      #-}
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 module Nbx.Config where
 
-import           Prelude
+import           Universum  hiding (Container)
 
-import           Data.Aeson          (FromJSON (..), ToJSON (..))
-import qualified Data.HashMap.Strict as HM
-import           Data.Monoid         ((<>))
-import           Data.Text           (Text, pack)
-import qualified Data.Yaml           as Yaml
-import qualified Data.Yaml.Include   as YamlInclude
-import           GHC.Generics        (Generic (..))
+import           Data.Aeson
 
 data NbxFile = NbxFile
-  { config   :: Maybe Config
-  , services :: [Service]
-  , datums   :: [Datum]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { nbxFileConfig   :: Maybe Config
+  , nbxFileServices :: [Service]
+  , nbxFileDatums   :: Maybe [Datum]
+  } deriving (Show)
 
 data Config = Config
-  { remotes :: [Remote]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { configRemotes :: [Remote]
+  } deriving (Show)
 
 data Remote = Remote
-  { name     :: Text
-  , env      :: Text
-  , path     :: Text
-  , provider :: Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { remoteName     :: Text
+  , remoteEnv      :: Text
+  , remotePath     :: Text
+  , remoteProvider :: Text
+  } deriving (Show)
 
 data Service = Service
-  { name :: Text
-  , live :: Maybe Live
-  , dev  :: Maybe Dev
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { serviceName :: Text
+  , serviceLive :: Maybe Live
+  , serviceDev  :: Maybe Dev
+  } deriving (Show)
 
 data Dev = Dev
-  { image        :: Text
-  , containers   :: Maybe [Container]
-  , aliases      :: Maybe [Text]
-  , dependencies :: Maybe [Text]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { devImage        :: Text
+  , devContainers   :: Maybe [Container]
+  , devAliases      :: Maybe [Text]
+  , devDependencies :: Maybe [Text]
+  } deriving (Show)
 
 data Live = Live
-  { image        :: Text
-  , build        :: Maybe Build
-  , containers   :: Maybe [Container]
-  , dependencies :: Maybe [Text]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { liveImage        :: Text
+  , liveBuild        :: Maybe Build
+  , liveContainers   :: Maybe [Container]
+  , liveDependencies :: Maybe [Text]
+  } deriving (Show)
 
 data Container = Container
-  { name    :: Text
-  , command :: Text
-  , image   :: Maybe Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { containerName    :: Text
+  , containerCommand :: Text
+  , containerImage   :: Maybe Text
+  } deriving (Show)
 
 data Build = Build
-  { image :: Text
-  , steps :: [Text]
-  , copy  :: [Copy]
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { buildImage :: Text
+  , buildSteps :: [Text]
+  , buildCopy  :: [Copy]
+  } deriving (Show)
 
 data Copy = Copy
-  { from :: Text
-  , to   :: Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { copyFrom :: Text
+  , copyTo   :: Text
+  } deriving (Show)
 
 data Datum = Datum
-  { name  :: Text
-  , image :: Text
-  , dir   :: Text
-  } deriving (ToJSON, FromJSON, Generic, Show)
+  { datumName  :: Text
+  , datumImage :: Text
+  , datumDir   :: Text
+  } deriving (Show)
 
--- | Attempts to load a given YAML file.
---
--- >>> config <- load "example.yaml"
---
-load :: FilePath -> IO (Either Text Yaml.Object)
-load f = do
-  file <- YamlInclude.decodeFile f
-  case file of
-    Nothing -> pure $ Left $ "Missing or invalid file " <> pack f <> "."
-    Just a  -> pure $ Right $ a
+instance FromJSON NbxFile where
+  parseJSON = withObject "nbxFile" $ \o ->
+    NbxFile
+    <$> o .:? "config"
+    <*> o .: "services"
+    <*> o .:? "data"
 
--- | Returns all toplevel keys in a config.
---
--- >>> keys config
--- ["section1","section2"]
---
-keys :: Yaml.Object -> [Text]
-keys obj = HM.keys obj
+instance FromJSON Config where
+  parseJSON = withObject "config" $ \o ->
+    Config
+    <$> o.: "remotes"
 
--- | Returns the value at the key if it exists
---
--- >>> keys sub
--- ["field1","field2"]
--- >>> get "field1" sub
--- Just "value1"
---
-get :: FromJSON a => Text -> Yaml.Object -> Maybe a
-get p obj = do
-  cfg <- HM.lookup p obj
-  Yaml.parseMaybe parseJSON cfg
+instance FromJSON Remote where
+  parseJSON = withObject "remote" $ \o ->
+    Remote
+    <$> o .: "name"
+    <*> o .: "env"
+    <*> o .: "path"
+    <*> o .: "provider"
 
-validateYaml :: FilePath -> IO (Maybe Text)
-validateYaml p = do
-  file <- load p
+instance FromJSON Service where
+  parseJSON = withObject "service" $ \o ->
+    Service
+    <$> o .: "name"
+    <*> o .:? "live"
+    <*> o .:? "dev"
 
-  let err = case file of
-        Left e -> Just e
-        Right fileContents -> do
-          let (_cfg :: Maybe Yaml.Object) = get "config" fileContents
-              (svcs :: Maybe Yaml.Object) = get "services" fileContents
-              (_dts :: Maybe Yaml.Object) = get "datums" fileContents
+instance FromJSON Dev where
+  parseJSON = withObject "dev" $ \o ->
+    Dev
+    <$> o .: "image"
+    <*> o .:? "containers"
+    <*> o .:? "aliases"
+    <*> o .:? "dependencies"
 
-          if svcs == Nothing
-          then Just "cannot find key 'services'"
-          else Nothing
+instance FromJSON Live where
+  parseJSON = withObject "live" $ \o ->
+    Live
+    <$> o .: "image"
+    <*> o .:? "build"
+    <*> o .:? "containers"
+    <*> o .:? "dependencies"
 
-  case err of
-    Nothing -> pure Nothing
-    Just e  -> pure $ Just $ "Error in " <> pack p <> ": " <> e
+instance FromJSON Container where
+  parseJSON = withObject "container" $ \o ->
+    Container
+    <$> o .: "name"
+    <*> o .: "command"
+    <*> o .:? "image"
 
--- | This is here to adjust how exceptions are printed from Yaml.
-parseError :: Yaml.ParseException -> String
-parseError (Yaml.AesonException err) = err
-parseError err                       = Yaml.prettyPrintParseException err
+instance FromJSON Build where
+  parseJSON = withObject "build" $ \o ->
+    Build
+    <$> o .: "image"
+    <*> o .: "steps"
+    <*> o .: "copy"
+
+instance FromJSON Copy where
+  parseJSON = withObject "copy" $ \o ->
+    Copy
+    <$> o .: "from"
+    <*> o .: "to"
+
+instance FromJSON Datum where
+  parseJSON = withObject "data" $ \o ->
+    Datum
+    <$> o .: "name"
+    <*> o .: "image"
+    <*> o .: "dir"
