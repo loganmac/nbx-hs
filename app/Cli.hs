@@ -2,10 +2,14 @@ module Main where
 
 import qualified Cli.Commands as Commands
 import qualified Nbx
+import           System.IO    as IO
 import           Universum
 
 main :: IO ()
 main = do
+  IO.hSetEncoding IO.stdout IO.utf8
+  IO.hSetEncoding IO.stderr IO.utf8
+
   Nbx.readConfig
   cmd <- Commands.parse
   case cmd of

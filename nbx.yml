@@ -1,37 +1,28 @@
-config:
-  remotes:
-    - name: prod
-      env: production
-      path: team/group/app
-      provider: nbx
-    - name: staging
-      env: staging
-      path: team/group/app
-      provider: nbx
-    - name: storage
-      env: storage
-      path: dockerhub/user
-      provider: docker
-
 data:
   - name: db
     image: nanobox/mysql
-
-    # TODO:
-    # config:
-    #   foo: bar
-    #   ram: 512
-
     dir: /var/db/mysql
+    config:
+      foo: bar
+      ram: "512"
 
   - name: queue
     image: nanobox/redis
-
-    # config:
-    #   foo: bar
-    #   ram: 512
-
     dir: /var/db/redis
+    config:
+      foo: bar
+      ram: "512"
+
+registries:
+  - name: prod
+    env: production
+    path: team/group/app
+  - name: staging
+    env: staging
+    path: team/group/app
+  - name: storage
+    env: storage
+    path: dockerhub/user
 
 services:
   - name: web
@@ -48,7 +39,6 @@ services:
         - service1
         - service2
         - s3
-
     live:
       image: nanobox/python-3
       build:
@@ -76,25 +66,25 @@ services:
         - 5555:5555
       udp:
         - 9654:10000
-
     env:
-    # TODO: VARS!
       - name: local
-        # vars:
-        #   FOO: bar
+        vars:
+          FOO: bar
       - name: staging
-        # vars:
-        #   BAZ: boa
+        vars:
+          BAZ: boa
       - name: production
-        # vars:
-        #   BLA: ber
+        vars:
+          BLA: ber
       - name: whatever
-        # vars:
-        #   BOO: yah
+        vars:
+          BOO: yah
 
   - name: worker
     dev:
-      image: nanobox/python-3-dev
+      # badKey: haha
+      # anotherBadKey: hehe
+      image:  #nanobox/python-3-dev
       containers:
         - name: python
           command: python app.py

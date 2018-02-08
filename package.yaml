@@ -22,10 +22,7 @@ description:         Please see the README on Github at <https://github.com/loga
 default-extensions:
 - NoImplicitPrelude
 - OverloadedStrings
-- DuplicateRecordFields
 - ScopedTypeVariables
-- DeriveGeneric
-- DeriveAnyClass
 
 dependencies:
 - aeson

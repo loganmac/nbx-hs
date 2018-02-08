@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3650c6919c86b7d1238abf0adab0e297e8046a6cbb70d81ba877ab7ab42a724a
+-- hash: 50fd06ea436f41b6ffa9a5c13c56f4c989197c54c93ff5a9c4e9aa99116de974
 
 name:           nbx
 version:        0.1.0.0
@@ -28,7 +28,7 @@ source-repository head
 library
   hs-source-dirs:
       src
-  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables DeriveGeneric DeriveAnyClass
+  default-extensions: NoImplicitPrelude OverloadedStrings ScopedTypeVariables
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs
   build-depends:
       aeson
@@ -51,6 +51,7 @@ library
       Nbx
       Nbx.Config
       Nbx.Print
+      Nbx.Schema
   other-modules:
       Paths_nbx
   default-language: Haskell2010
@@ -59,7 +60,7 @@ executable nbx
   main-is: Cli.hs
   hs-source-dirs:
       app
-  default-extensions: NoImplicitPrelude OverloadedStrings DuplicateRecordFields ScopedTypeVariables DeriveGeneric DeriveAnyClass
+  default-extensions: NoImplicitPrelude OverloadedStrings ScopedTypeVariables
   ghc-options: -Wall -Werror -Wincomplete-record-updates -Wincomplete-uni-patterns -Wtabs -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
