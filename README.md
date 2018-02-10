@@ -35,8 +35,10 @@ nbx push (nbx)
 
 ## Workflow
 
-- nbx init
-- nbx run     [-l]
+*MVP
+
+- nbx init *
+- nbx run     [-l] *
 - nbx push    [remote]
 
 ## Troubleshooting
@@ -48,7 +50,7 @@ nbx push (nbx)
 
 ## Helpers
 
-- nbx login [remote]
+- nbx login [remote] *
 - nbx setup
 - nbx implode
 
