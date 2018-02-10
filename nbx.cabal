@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 50fd06ea436f41b6ffa9a5c13c56f4c989197c54c93ff5a9c4e9aa99116de974
+-- hash: d470b44d01070e0c53fc9a8c760c8b118d330747a7818d60693d255ad20db879
 
 name:           nbx
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
     , ansi-terminal
     , base >=4.7 && <5
     , bytestring
+    , megaparsec
     , pretty-show
     , pretty-terminal
     , regex-compat
@@ -50,8 +51,8 @@ library
   exposed-modules:
       Nbx
       Nbx.Config
+      Nbx.Parser
       Nbx.Print
-      Nbx.Schema
   other-modules:
       Paths_nbx
   default-language: Haskell2010
@@ -67,6 +68,7 @@ executable nbx
     , ansi-terminal
     , base >=4.7 && <5
     , bytestring
+    , megaparsec
     , nbx
     , pretty-show
     , pretty-terminal

@@ -1,0 +1,18 @@
+\n\e[1;91mError parsing nbx.yml:
+
+\e[0;91m15:1:
+   |
+15 |   engine:
+   |   ^
+
+\e[1;91mUnknown top level field 'engine'.
+
+  \e[0;93mINFO:
+
+    At the top level of an NBXfile, NBX recognizes three fields:
+
+    \e[1;93m      data\e[0;93m: (optional) A list of data components for persistence & caching
+
+    \e[1;93mregistries\e[0;93m: (optional) A list of docker registries to send images to
+
+    \e[1;93m  services\e[0;93m: (required) A list of services and configuration details\n

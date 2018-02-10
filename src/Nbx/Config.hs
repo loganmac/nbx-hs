@@ -7,32 +7,25 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Text           as T
 
 data NbxFile = NbxFile
-  { nbxFileConfig   :: Maybe Config
-  , nbxFileServices :: [Service]
-  , nbxFileDatums   :: Maybe [Datum]
+  { nbxFileRegistries :: Maybe [Registry]
+  , nbxFileServices   :: [Service]
+  , nbxFileDatums     :: Maybe [Datum]
   } deriving (Show)
 
-data Config = Config
-  { configRemotes :: [Remote]
-  } deriving (Show)
-
-data Remote = Remote
-  { remoteName     :: T.Text
-  , remoteEnv      :: T.Text
-  , remotePath     :: T.Text
-  , remoteProvider :: T.Text
+data Registry = Registry
+  { registryName :: T.Text
+  , registryPath :: T.Text
   } deriving (Show)
 
 data Service = Service
   { serviceName :: T.Text
   , serviceDev  :: Maybe Dev
   , serviceLive :: Maybe Live
-  , serviceEnv  :: Maybe [Env]
   } deriving (Show)
 
 data Dev = Dev
   { devImage        :: T.Text
-  , devContainers   :: Maybe [Container]
+  , devContainers   :: Maybe [Process]
   , devAliases      :: Maybe [T.Text]
   , devDependencies :: Maybe [T.Text]
   } deriving (Show)
@@ -40,16 +33,11 @@ data Dev = Dev
 data Live = Live
   { liveImage        :: T.Text
   , liveBuild        :: Maybe Build
-  , liveContainers   :: Maybe [Container]
+  , liveProcesses    :: Maybe [Process]
   , liveDependencies :: Maybe [T.Text]
   , liveHttp         :: Maybe Http
   , liveTcp          :: Maybe [T.Text]
   , liveUdp          :: Maybe [T.Text]
-  } deriving (Show)
-
-data Env = Env
-  { envName :: T.Text
-  , envVars :: HM.HashMap T.Text T.Text
   } deriving (Show)
 
 data Http = Http
@@ -59,10 +47,10 @@ data Http = Http
   , httpRoutes :: Maybe [T.Text]
   } deriving (Show)
 
-data Container = Container
-  { containerName    :: T.Text
-  , containerCommand :: T.Text
-  , containerImage   :: Maybe T.Text
+data Process = Process
+  { processName    :: T.Text
+  , processCommand :: T.Text
+  , processImage   :: Maybe T.Text
   } deriving (Show)
 
 data Build = Build
@@ -86,22 +74,15 @@ data Datum = Datum
 instance FromJSON NbxFile where
   parseJSON = withObject "nbxFile" $ \o ->
     NbxFile
-    <$> o .:? "config"
+    <$> o .:? "registries"
     <*> o .: "services"
     <*> o .:? "data"
 
-instance FromJSON Config where
-  parseJSON = withObject "config" $ \o ->
-    Config
-    <$> o.: "remotes"
-
-instance FromJSON Remote where
-  parseJSON = withObject "remote" $ \o ->
-    Remote
+instance FromJSON Registry where
+  parseJSON = withObject "registry" $ \o ->
+    Registry
     <$> o .: "name"
-    <*> o .: "env"
     <*> o .: "path"
-    <*> o .: "provider"
 
 instance FromJSON Service where
   parseJSON = withObject "service" $ \o ->
@@ -109,7 +90,6 @@ instance FromJSON Service where
     <$> o .: "name"
     <*> o .:? "live"
     <*> o .:? "dev"
-    <*> o .:? "env"
 
 instance FromJSON Dev where
   parseJSON = withObject "dev" $ \o ->
@@ -130,12 +110,6 @@ instance FromJSON Live where
     <*> o .:? "tcp"
     <*> o .:? "udp"
 
-instance FromJSON Env where
-  parseJSON = withObject "env" $ \o ->
-    Env
-    <$> o .: "name"
-    <*> o .: "vars"
-
 instance FromJSON Http where
   parseJSON = withObject "http" $ \o ->
     Http
@@ -144,9 +118,9 @@ instance FromJSON Http where
     <*> o .:? "health"
     <*> o .:? "routes"
 
-instance FromJSON Container where
-  parseJSON = withObject "container" $ \o ->
-    Container
+instance FromJSON Process where
+  parseJSON = withObject "process" $ \o ->
+    Process
     <$> o .: "name"
     <*> o .: "command"
     <*> o .:? "image"

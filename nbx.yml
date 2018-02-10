@@ -13,22 +13,24 @@ data:
       foo: bar
       ram: "512"
 
-registries:
-  - name: prod
-    env: production
-    path: team/group/app
+destinations:
+  - name: production
+    type: nanobox
+    registry: registry.appname.nanoapp.io
+    deploy: https://nanobox.io/deploy?team=myteam&group=mygroup&app=myApp
+  - name: backup
+    type: docker
+    registry: hub.docker.io
   - name: staging
-    env: staging
-    path: team/group/app
-  - name: storage
-    env: storage
-    path: dockerhub/user
+    type: kubernetes
+    registry: random.registry.io
+    deploy: https://api.random.registry.io?deploy_key=some-deployment-key
 
 services:
   - name: web
     dev:
       image: nanobox/python-3-dev
-      containers:
+      processes:
         - name: nginx
           command: nginx -c /etc/nginx.conf
         - name: python
@@ -50,14 +52,14 @@ services:
             to: /app
           - from: bin
             to: /usr/local/sbin
-      containers:
+      processes:
         - name: nginx
           command: nginx -c /etc/nginx.conf
         - name: python
           command: nanoinit python app.py
       http:
         expose: 8080
-        ssl: true
+        force_ssl: true
         health: /health
         routes:
           - 'admin:'
@@ -66,26 +68,11 @@ services:
         - 5555:5555
       udp:
         - 9654:10000
-    env:
-      - name: local
-        vars:
-          FOO: bar
-      - name: staging
-        vars:
-          BAZ: boa
-      - name: production
-        vars:
-          BLA: ber
-      - name: whatever
-        vars:
-          BOO: yah
 
   - name: worker
     dev:
-      # badKey: haha
-      # anotherBadKey: hehe
-      image:  #nanobox/python-3-dev
-      containers:
+      image: nanobox/python-3-dev
+      processes:
         - name: python
           command: python app.py
       aliases:
