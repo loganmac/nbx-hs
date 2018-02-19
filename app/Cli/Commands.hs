@@ -2,8 +2,9 @@
 -}
 module Cli.Commands where
 
+import qualified Data.Text as T
 import           Prelude
-import           Turtle  (Parser, options, subcommand, (<|>))
+import           Turtle    (Parser, argText, options, subcommand, (<|>))
 
 --------------------------------------------------------------------------------
 -- COMMANDS
@@ -12,10 +13,11 @@ import           Turtle  (Parser, options, subcommand, (<|>))
 data Command
   = Main
   | Init
-  | Push
-  | Status
-  | Setup
-  | Implode
+  | Push T.Text
+  | Logs T.Text
+  | Console T.Text
+  | Tunnel T.Text
+  | Login T.Text
 
 --------------------------------------------------------------------------------
 -- PARSING
@@ -30,10 +32,11 @@ parser :: Parser Command
 parser =
   mainCmd
   <|> initCmd
-  <|> statusCmd
   <|> pushCmd
-  <|> setupCmd
-  <|> implodeCmd
+  <|> logsCmd
+  <|> consoleCmd
+  <|> tunnelCmd
+  <|> loginCmd
 
 -- | parse a raw `nbx`
 mainCmd :: Parser Command
@@ -48,34 +51,42 @@ initCmd =
     "Initialize a .nbx.yml file for a project"
     $ pure Init
 
--- | parse `nbx status`
-statusCmd :: Parser Command
-statusCmd =
-  subcommand
-    "status"
-    "Display the status of the NBX platform."
-    $ pure Status
-
 -- | parse `nbx push`
 pushCmd :: Parser Command
 pushCmd =
   subcommand
     "push"
     "Publish with nanobox."
-    $ pure Push
+    $ Push <$> argText "target" "The target to push to"
 
--- | parse `nbx setup`
-setupCmd :: Parser Command
-setupCmd =
+-- | parse `nbx logs`
+logsCmd :: Parser Command
+logsCmd =
   subcommand
-    "setup"
-    "Install/configure NBX platform."
-    $ pure Setup
+    "logs"
+    "Read the logs of a target."
+    $ Push <$> argText "target" "The target to view the logs of"
 
--- | parse `nbx implode`
-implodeCmd :: Parser Command
-implodeCmd =
+-- | parse `nbx console`
+consoleCmd :: Parser Command
+consoleCmd =
   subcommand
-    "implode"
-    "Delete NBX and all configuration"
-    $ pure Implode
+    "console"
+    "Open a console to the target."
+    $ Push <$> argText "target" "The target to console to"
+
+-- | parse `nbx tunnel`
+tunnelCmd :: Parser Command
+tunnelCmd =
+  subcommand
+    "tunnel"
+    "Tunnel into a target."
+    $ Push <$> argText "target" "The target to tunnel to"
+
+-- | parse `nbx login`
+loginCmd :: Parser Command
+loginCmd =
+  subcommand
+    "login"
+    "Login to Nanobox or a registry."
+    $ Push <$> argText "target" "The target to login to"

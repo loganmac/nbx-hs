@@ -1,67 +1,44 @@
 destinations:
-  - name: production
-    project: username/app-prod
-  - name: backup
-    project: username/app-backup
-  - name: staging
-    project: username/app-staging
-  - name: bob
-    project: username/app-bob
-    registry: https://bobsspecialregistry.io
+  - id: username/app-prod
+    alias: production
+    registry: myRegistry
+  - id: username/app-backup
+    alias: backup
+    registry: someRegistry
+  - id: username/app-staging
+    alias: staging
+    registry: aRegistry
+  - id: username/app-bob
+    alias: bob
+    registry: bobsspecialregistry.com
 
 resources:
-  - name: db
+  - id: db
     image: nanobox/mysql
-    dir: /var/db/mysql
-    options: # parse contents as JSON
+    options:
       foo: bar
-      ram: 512
-
-  - name: queue
+      baz: qux
+  - id: queue
     image: nanobox/redis
-    dir: /var/db/redis
 
 services:
-  - name: web
-    dev:
-      image: nanobox/python-3-dev
-      processes:
-        - name: nginx
-          command: nginx -c /etc/nginx.conf
-        - name: python
-          command: python app.py
-      aliases:
-        - nanoapp.local
-    live:
-      image: nanobox/python-3
-      build_image: nanobox/python-3-dev
-      steps:
-        - python compile.py
-      # (optional) only the contents of this directory will be placed at /app on the live image
-      output_dir: /build
-      processes:
-        - name: nginx
-          command: nginx -c /etc/nginx.conf
-        - name: python
-          command: nanoinit python app.py
-      expose: 8080
-      force_ssl: true
-      health: /health
-      routes:
-        - 'admin:'
-        - '^/admin/'
-      tcp:
-        - 5555:5555
-      udp:
-        - 9654:10000
-
-  - name: worker
-    dev:
-      image: nanobox/python-3-dev
-      processes:
-        - name: python
-          command: python app.py
-      aliases:
-        - nanoapp.local
-      dependencies:
-        - service1
+  - id: web
+    containers:
+      - id: nginx
+        image: Dockerfile.nginx
+      - id: app
+        image: Dockerfile.app
+    http_port: 8080
+    force_ssl: true
+    health_check: /health
+    routes:
+      - 'admin:'
+      - '^/admin/'
+    tcp:
+      - 5555:5555
+    udp:
+      - 9654:10000
+  - id: worker
+    containers:
+      - id: app
+        image: Dockerfile.worker

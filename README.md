@@ -3,6 +3,11 @@
 requirements:
 docker running, `which docker && docker ps` with a 0 exit code
 
+logins - nanobox & registry(global)
+docker building, tagging, pushing
+odin - generate & send schema and post deploy
+console, tunnel, logs
+
 nbx push (docker)
 for each service:
   1 - if there is a build section
@@ -33,26 +38,16 @@ nbx push (nbx)
 3 - if deploy
   a. POST /deploys
 
-## Workflow
+## Commands
 
 *MVP
 
-- nbx init *
-- nbx run     [-l] *
+- nbx init
 - nbx push    [remote]
-
-## Troubleshooting
-
 - nbx logs    [remote] [service]
 - nbx console [remote] [service]
 - nbx tunnel  [remote] [service]
-- nbx status  [remote] [service]
-
-## Helpers
-
-- nbx login [remote] *
-- nbx setup
-- nbx implode
+- nbx login   [remote]
 
 ## Bash, Zsh, and Fish Completions (so I don't have to find this later)
 

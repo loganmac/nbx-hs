@@ -1,13 +1,10 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module Nbx
 (readConfig, push)
 where
 
-import qualified Data.Yaml        as Yaml
-import qualified Nbx.Config       as Config
-import qualified Nbx.Print        as Print
+import qualified Nbx.Config as Config
+import qualified Nbx.Print  as Print
 import qualified Shellout
-import qualified Text.Show.Pretty as P
 import           Universum
 
 --------------------------------------------------------------------------------
@@ -16,36 +13,25 @@ import           Universum
 readConfig :: IO ()
 readConfig = do
   -- here we might do things like check the config,
-  -- read .nbx.yml, etc.
+  _ <- Config.parseFile "./nbx.yml"
+  pure ()
 
-  (parsed::Either Yaml.ParseException Config.NbxFile) <- Yaml.decodeFileEither "./nbx.yml"
-  case parsed of
-    Left err -> do
-      putTextLn $ "Invalid configuration found while parsing nbx.yml:"
-      putStrLn $ Yaml.prettyPrintParseException err
-      exitFailure
-    Right settings ->
-      P.pPrint settings
       -- let services = Config.nbxFileServices settings in
       -- for_ services $ \service -> putTextLn $ Config.serviceName service
 
+verifyHasDocker :: IO ()
+verifyHasDocker = do
+  putTextLn "Checking..."
+  putTextLn "Has docker!~"
+
 -- | > nbx push
-push :: IO ()
-push = do
+push :: Text -> IO ()
+push target = do
   let header = Print.header     -- define a function to print headers
   shell <- Shellout.new driver  -- create a way to run external processes
 
-  header "Setting up concert"
+  shell "Building Image" "docker build"
 
-  shell "Preparing show"   "./test-scripts/bash/noisy-good.sh"
-  shell "Setting up stage" "./test-scripts/bash/good-with-warn.sh"
-  shell "Inviting guests"  "./test-scripts/bash/good.sh"
-
-  header "Let the show begin"
-
-  shell "Opening gates" "./test-scripts/bash/good.sh"
-  shell "Starting show" "./test-scripts/bash/bad.sh"
-  shell "Shouldn't run" "./test-scripts/bash/good.sh"
 
 --------------------------------------------------------------------------------
 -- SHELL DISPLAY DRIVER

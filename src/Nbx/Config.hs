@@ -1,147 +1,91 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Nbx.Config where
 
-import           Prelude
+import           Universum  hiding (Container)
 
-import           Data.Aeson
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Text           as T
+import qualified Data.Aeson as A
+import qualified Data.Yaml  as Yaml
 
 data NbxFile = NbxFile
-  { nbxFileRegistries :: Maybe [Registry]
-  , nbxFileServices   :: [Service]
-  , nbxFileDatums     :: Maybe [Datum]
+  { nbxFileDestinations :: [Destination]
+  , nbxFileResources    :: Maybe [Resource]
+  , nbxFileServices     :: [Service]
   } deriving (Show)
 
-data Registry = Registry
-  { registryName :: T.Text
-  , registryPath :: T.Text
+data Destination = Destination
+  { destinationId       :: Text
+  , destinationAlias    :: Text
+  , destinationRegistry :: Text
+  } deriving (Show)
+
+data Resource = Resource
+  { resourceId      :: Text
+  , resourceImage   :: Text
+  , resourceOptions :: Maybe A.Object
   } deriving (Show)
 
 data Service = Service
-  { serviceName :: T.Text
-  , serviceDev  :: Maybe Dev
-  , serviceLive :: Maybe Live
+  { serviceId         :: Text
+  , serviceContainers :: Maybe [Container]
+  , servicePort       :: Maybe Int
+  , serviceForceSsl   :: Maybe Bool
+  , serviceHealth     :: Maybe Text
+  , serviceRoutes     :: Maybe [Text]
+  , serviceTcp        :: Maybe [Text]
+  , serviceUdp        :: Maybe [Text]
   } deriving (Show)
 
-data Dev = Dev
-  { devImage        :: T.Text
-  , devContainers   :: Maybe [Process]
-  , devAliases      :: Maybe [T.Text]
-  , devDependencies :: Maybe [T.Text]
+data Container = Container
+  { containerId    :: Text
+  , containerImage :: Text
   } deriving (Show)
 
-data Live = Live
-  { liveImage        :: T.Text
-  , liveBuild        :: Maybe Build
-  , liveProcesses    :: Maybe [Process]
-  , liveDependencies :: Maybe [T.Text]
-  , liveHttp         :: Maybe Http
-  , liveTcp          :: Maybe [T.Text]
-  , liveUdp          :: Maybe [T.Text]
-  } deriving (Show)
-
-data Http = Http
-  { httpExpose :: Maybe T.Text
-  , httpSsl    :: Maybe Bool
-  , httpHealth :: Maybe T.Text
-  , httpRoutes :: Maybe [T.Text]
-  } deriving (Show)
-
-data Process = Process
-  { processName    :: T.Text
-  , processCommand :: T.Text
-  , processImage   :: Maybe T.Text
-  } deriving (Show)
-
-data Build = Build
-  { buildImage :: T.Text
-  , buildSteps :: [T.Text]
-  , buildCopy  :: [Copy]
-  } deriving (Show)
-
-data Copy = Copy
-  { copyFrom :: T.Text
-  , copyTo   :: T.Text
-  } deriving (Show)
-
-data Datum = Datum
-  { datumName   :: T.Text
-  , datumImage  :: T.Text
-  , datumConfig :: HM.HashMap T.Text T.Text
-  , datumDir    :: T.Text
-  } deriving (Show)
-
-instance FromJSON NbxFile where
-  parseJSON = withObject "nbxFile" $ \o ->
+instance A.FromJSON NbxFile where
+  parseJSON = A.withObject "nbxFile" $ \o ->
     NbxFile
-    <$> o .:? "registries"
-    <*> o .: "services"
-    <*> o .:? "data"
+    <$> o A..:  "destinations"
+    <*> o A..:? "resources"
+    <*> o A..:  "services"
 
-instance FromJSON Registry where
-  parseJSON = withObject "registry" $ \o ->
-    Registry
-    <$> o .: "name"
-    <*> o .: "path"
+instance A.FromJSON Destination where
+  parseJSON = A.withObject "destination" $ \o ->
+    Destination
+    <$> o A..: "id"
+    <*> o A..: "alias"
+    <*> o A..: "registry"
 
-instance FromJSON Service where
-  parseJSON = withObject "service" $ \o ->
+instance A.FromJSON Resource where
+  parseJSON = A.withObject "resource" $ \o ->
+    Resource
+    <$> o A..:  "id"
+    <*> o A..:  "image"
+    <*> o A..:? "options"
+
+instance A.FromJSON Service where
+  parseJSON = A.withObject "service" $ \o ->
     Service
-    <$> o .: "name"
-    <*> o .:? "live"
-    <*> o .:? "dev"
+    <$> o A..:  "id"
+    <*> o A..:  "containers"
+    <*> o A..:? "htttp_port"
+    <*> o A..:? "force_ssl"
+    <*> o A..:? "health"
+    <*> o A..:? "routes"
+    <*> o A..:? "tcp"
+    <*> o A..:? "udp"
 
-instance FromJSON Dev where
-  parseJSON = withObject "dev" $ \o ->
-    Dev
-    <$> o .: "image"
-    <*> o .:? "containers"
-    <*> o .:? "aliases"
-    <*> o .:? "dependencies"
+instance A.FromJSON Container where
+  parseJSON = A.withObject "container" $ \o ->
+    Container
+    <$> o A..: "id"
+    <*> o A..: "image"
 
-instance FromJSON Live where
-  parseJSON = withObject "live" $ \o ->
-    Live
-    <$> o .: "image"
-    <*> o .:? "build"
-    <*> o .:? "containers"
-    <*> o .:? "dependencies"
-    <*> o .:? "http"
-    <*> o .:? "tcp"
-    <*> o .:? "udp"
-
-instance FromJSON Http where
-  parseJSON = withObject "http" $ \o ->
-    Http
-    <$> o .:? "expose"
-    <*> o .:? "ssl"
-    <*> o .:? "health"
-    <*> o .:? "routes"
-
-instance FromJSON Process where
-  parseJSON = withObject "process" $ \o ->
-    Process
-    <$> o .: "name"
-    <*> o .: "command"
-    <*> o .:? "image"
-
-instance FromJSON Build where
-  parseJSON = withObject "build" $ \o ->
-    Build
-    <$> o .: "image"
-    <*> o .: "steps"
-    <*> o .: "copy"
-
-instance FromJSON Copy where
-  parseJSON = withObject "copy" $ \o ->
-    Copy
-    <$> o .: "from"
-    <*> o .: "to"
-
-instance FromJSON Datum where
-  parseJSON = withObject "data" $ \o ->
-    Datum
-    <$> o .: "name"
-    <*> o .: "image"
-    <*> o .: "config"
-    <*> o .: "dir"
+parseFile :: FilePath -> IO NbxFile
+parseFile file = do
+  yaml :: Either Yaml.ParseException NbxFile <- Yaml.decodeFileEither file
+  case yaml of
+    Left err -> do
+      putTextLn "Invalid configuration found while parsing nbx.yml:"
+      putStrLn $ Yaml.prettyPrintParseException err
+      exitFailure
+    Right settings ->
+      pure settings
