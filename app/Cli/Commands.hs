@@ -13,11 +13,11 @@ import           Turtle    (Parser, argText, options, subcommand, (<|>))
 data Command
   = Main
   | Init
+  | Login
   | Push T.Text
   | Logs T.Text
   | Console T.Text
   | Tunnel T.Text
-  | Login T.Text
 
 --------------------------------------------------------------------------------
 -- PARSING
@@ -32,11 +32,11 @@ parser :: Parser Command
 parser =
   mainCmd
   <|> initCmd
+  <|> loginCmd
   <|> pushCmd
   <|> logsCmd
   <|> consoleCmd
   <|> tunnelCmd
-  <|> loginCmd
 
 -- | parse a raw `nbx`
 mainCmd :: Parser Command
@@ -50,6 +50,14 @@ initCmd =
     "init"
     "Initialize a .nbx.yml file for a project"
     $ pure Init
+
+-- | parse `nbx login`
+loginCmd :: Parser Command
+loginCmd =
+  subcommand
+    "login"
+    "Login to Nanobox."
+    $ pure Login
 
 -- | parse `nbx push`
 pushCmd :: Parser Command
@@ -65,7 +73,7 @@ logsCmd =
   subcommand
     "logs"
     "Read the logs of a target."
-    $ Push <$> argText "target" "The target to view the logs of"
+    $ Logs <$> argText "target" "The target to view the logs of"
 
 -- | parse `nbx console`
 consoleCmd :: Parser Command
@@ -73,7 +81,7 @@ consoleCmd =
   subcommand
     "console"
     "Open a console to the target."
-    $ Push <$> argText "target" "The target to console to"
+    $ Console <$> argText "target" "The target to console to"
 
 -- | parse `nbx tunnel`
 tunnelCmd :: Parser Command
@@ -81,12 +89,5 @@ tunnelCmd =
   subcommand
     "tunnel"
     "Tunnel into a target."
-    $ Push <$> argText "target" "The target to tunnel to"
+    $ Tunnel <$> argText "target" "The target to tunnel to"
 
--- | parse `nbx login`
-loginCmd :: Parser Command
-loginCmd =
-  subcommand
-    "login"
-    "Login to Nanobox or a registry."
-    $ Push <$> argText "target" "The target to login to"

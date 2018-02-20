@@ -1,42 +1,23 @@
 # nbx
 
 requirements:
-docker running, `which docker && docker ps` with a 0 exit code
-
-logins - nanobox & registry(global)
+logins - nanobox
 docker building, tagging, pushing
 odin - generate & send schema and post deploy
 console, tunnel, logs
 
 nbx push (docker)
 for each service:
-  1 - if there is a build section
-    a - pulling or building image from image attribute in build
-    b - create a container from this new image (mount the source into the container at /app)
-    c - run all steps
-    d - delete container
-  2 - look in the live section, pull image
-    a - if image is a Dockerfile, then first, we need to do a docker build
-    b - if image is remote registry, then we need to pull the image
-  3 - create final image
-    a. create container
-    b. copy dirs specific in build
-    c. commit (creating a new image)
-  4 - tag the image
-  5 - push to the remote registry
+
+1. commit (creating a new image)
+2. tag the image
+3. push to the remote registry
 
 nbx push (nbx)
 
-1 - docker push
-2 - if commit
-  a - fetch the nbx checksum from odin
-  b - generate a checksum of nbx file
-  c - If checksum is different
-    1 - POST /commits to odin
-    2 - provide nbx file
-    3 - provide checksum
-3 - if deploy
-  a. POST /deploys
+1. docker push
+2. post schema
+3. POST /deploys
 
 ## Commands
 
